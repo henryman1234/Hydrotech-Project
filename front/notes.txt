@@ -1,0 +1,571 @@
+MongoDB (données statiques : nœuds, conduites, demandes)
+        ↓
+[Script de génération INP] : lit MongoDB → écrit un fichier .inp
+        ↓
+[API Node.js] : exécute epanet-js → lance la simulation → extrait les résultats
+        ↓
+[JSON {pressions, débits, vitesses, pertes de charge}]
+        ↓
+[React/Leaflet] : polling toutes les 5 secondes → mise à jour de la carte
+
+
+
+// generateInp.ts
+import { NodeData, PipeData } from "./types";
+
+export function generateInpFile(nodes: NodeData[], pipes: PipeData[]): string {
+  const lines: string[] = [];
+
+  // En-tête
+  lines.push("[TITLE]");
+  lines.push("Réseau Bonas - Généré automatiquement");
+  lines.push("");
+
+  // Jonctions (nœuds)
+  lines.push("[JUNCTIONS]");
+  lines.push(";ID       Elevation   Demand      Pattern");
+  for (const node of nodes) {
+    if (node.type === "JUNCTION" || node.type === "RESERVOIR") {
+      const elevation = node.elevation ?? 0;
+      const demand = node.baseDemand ?? 0;
+      lines.push(` ${node._id.padEnd(10)} ${elevation.toFixed(2).padEnd(11)} ${demand.toFixed(2).padEnd(11)} ;`);
+    }
+  }
+  lines.push("");
+
+  // Réservoirs
+  lines.push("[RESERVOIRS]");
+  lines.push(";ID       Head        Pattern");
+  for (const node of nodes) {
+    if (node.type === "RESERVOIR") {
+      lines.push(` ${node._id.padEnd(10)} ${node.elevation.toFixed(2).padEnd(11)} ;`);
+    }
+  }
+  lines.push("");
+
+  // Conduites
+  lines.push("[PIPES]");
+  lines.push(";ID       Node1      Node2      Length  Diameter  Roughness  MinorLoss  Status");
+  for (const pipe of pipes) {
+    const length = pipe.length ?? 100;
+    const diameter = pipe.diameter ?? 100;
+    const roughness = getRoughness(pipe.material); // fonction utilitaire
+    lines.push(` ${pipe._id.padEnd(10)} ${pipe.startNode.padEnd(10)} ${pipe.endNode.padEnd(10)} ${length.toFixed(1).padEnd(8)} ${diameter.toFixed(1).padEnd(9)} ${roughness.toFixed(1).padEnd(10)} 0 Open ;`);
+  }
+  lines.push("");
+
+  // Options
+  lines.push("[OPTIONS]");
+  lines.push("Units           LPS");  // litres par seconde
+  lines.push("Headloss        D-W");  // Darcy-Weisbach
+  lines.push("");
+
+  return lines.join("\n");
+}
+
+
+
+
+[TITLE]
+Exemple de Réseau EPANET - Initiation
+
+[JUNCTIONS]
+;ID      Elev    Demand  Pattern
+J-1      100     20      1       ; Noeud 1
+J-2      95      15      1       ; Noeud 2
+J-3      105     10      1       ; Noeud 3
+
+[RESERVOIRS]
+;ID      Head    Pattern
+R-1      120     ; Bâche / Réservoir principal
+
+[PIPES]
+;ID      Node1   Node2   Length  Diameter        Roughness       Status
+P-1      R-1     J-1     500     300             100             Open
+P-2      J-1     J-2     300     200             100             Open
+P-3      J-1     J-3     400     150             100             Open
+
+[COORDINATES]
+;ID      X-Coord         Y-Coord
+J-1      1000            2000
+J-2      2000            2000
+J-3      1000            1000
+R-1      0               2000
+
+[OPTIONS]
+Units           LPS
+Headloss        H-W
+Specific Gravity 1
+Viscosity       1.0
+
+[END]
+
+
+// hydraulicService.ts
+import { Project, Workspace } from "epanet-js";
+
+export interface HydraulicResults {
+  nodes: Array<{
+    id: string;
+    pressure: number;   // en mètres de colonne d'eau
+    head: number;       // charge hydraulique
+    demand: number;     // demande satisfaite
+  }>;
+  links: Array<{
+    id: string;
+    flow: number;       // débit (L/s)
+    velocity: number;   // vitesse (m/s)
+    headloss: number;   // perte de charge (m/km)
+    status: string;     // "Open", "Closed", "Active"
+  }>;
+}
+
+export class HydraulicSimulator {
+  private workspace: Workspace | null = null;
+
+  async init(): Promise<void> {
+    this.workspace = new Workspace();
+    await this.workspace.loadModule();  // charge le module WASM
+  }
+
+  async run(inpContent: string): Promise<HydraulicResults> {
+    if (!this.workspace) throw new Error("Workspace non initialisé. Appelez init() d'abord.");
+
+    // Écriture du fichier INP dans le workspace virtuel
+    this.workspace.writeFile("network.inp", inpContent);
+
+    // Création du projet et résolution hydraulique
+    const model = new Project(this.workspace);
+    model.open("network.inp", "report.rpt", "");
+    model.solveH();
+
+    // Extraction des résultats
+    const results = this.extractResults(model);
+
+    model.close();
+    return results;
+  }
+
+  private extractResults(model: any): HydraulicResults {
+    // Récupération du nombre de nœuds et de liens
+    const numNodes = model.getCount(model.NodeType.EN_JUNCTION)
+      + model.getCount(model.NodeType.EN_RESERVOIR)
+      + model.getCount(model.NodeType.EN_TANK);
+
+    const numLinks = model.getCount(model.LinkType.EN_PIPE)
+      + model.getCount(model.LinkType.EN_PUMP)
+      + model.getCount(model.LinkType.EN_VALVE);
+
+    const nodes: any[] = [];
+    const links: any[] = [];
+
+    // Parcours de tous les nœuds
+    for (let i = 1; i <= numNodes; i++) {
+      const id = model.getNodeNameId(i);
+      nodes.push({
+        id: id,
+        pressure: model.getNodeValue(i, model.NodeValue.EN_PRESSURE),
+        head: model.getNodeValue(i, model.NodeValue.EN_HEAD),
+        demand: model.getNodeValue(i, model.NodeValue.EN_DEMAND),
+      });
+    }
+
+    // Parcours de tous les liens
+    for (let i = 1; i <= numLinks; i++) {
+      const id = model.getLinkNameId(i);
+      links.push({
+        id: id,
+        flow: model.getLinkValue(i, model.LinkValue.EN_FLOW),
+        velocity: model.getLinkValue(i, model.LinkValue.EN_VELOCITY),
+        headloss: model.getLinkValue(i, model.LinkValue.EN_HEADLOSS),
+        status: "Open",
+      });
+    }
+
+    return { nodes, links };
+  }
+}
+
+// Exemple d'utilisation
+import { HydraulicSimulator } from "./hydraulicService";
+import { generateInpFile } from "./generateInp";
+import { getNodesFromMongo, getPipesFromMongo } from "./mongoService";
+
+const simulator = new HydraulicSimulator();
+await simulator.init();
+
+// Lecture des données statiques depuis MongoDB
+const nodes = await getNodesFromMongo();
+const pipes = await getPipesFromMongo();
+
+// Génération du fichier INP à la volée
+const inp = generateInpFile(nodes, pipes);
+
+// Lancement de la simulation
+const results = await simulator.run(inp);
+
+console.log(results.nodes[0]);  // { id: 'N1', pressure: 32.5, head: 450.2, demand: 2.3 }
+
+
+const { data: networkState } = useQuery({
+  queryKey: ["network-state"],
+  queryFn: () => fetch("/api/network/state").then(res => res.json()),
+  refetchInterval: 5000,  // toutes les 5 secondes
+});
+
+
+const liveNodesMap = new Map(networkState?.nodes?.map((n: any) => [n.id, n]));
+
+// Dans le map des nœuds Leaflet
+const liveData = liveNodesMap.get(node._id);
+<Pin
+  key={node._id}
+  node={node}
+  livePressure={liveData?.pressure}
+  hasAlert={liveData?.pressure < 10}
+/>
+
+const liveNodesMap = new Map(networkState?.nodes?.map((n: any) => [n.id, n]));
+
+// Dans le map des nœuds Leaflet
+const liveData = liveNodesMap.get(node._id);
+<Pin
+  key={node._id}
+  node={node}
+  livePressure={liveData?.pressure}
+  hasAlert={liveData?.pressure < 10}
+/>
+
+export function generateInpFile(nodes, pipes) {
+  const lines = [];
+  lines.push("[TITLE]");
+  lines.push("Réseau temporaire");
+  lines.push("");
+  lines.push("[JUNCTIONS]");
+  lines.push(";ID       Elevation   Demand");
+  for (const node of nodes) {
+    if (node.type === "JUNCTION" || node.type === "RESERVOIR" || !node.type) {
+      const id = (node._id || node.code || "?").toString();
+      const elev = (node.elevation || 0).toString();
+      const dem = (node.baseDemand || 0).toString();
+      lines.push(` ${id.padEnd(10)} ${elev.padEnd(11)} ${dem.padEnd(11)} ;`);
+    }
+  }
+  lines.push("");
+  lines.push("[RESERVOIRS]");
+  lines.push(";ID       Head");
+  for (const node of nodes) {
+    if (node.type === "RESERVOIR") {
+      const id = (node._id || node.code || "?").toString();
+      const head = (node.elevation || 0).toString();
+      lines.push(` ${id.padEnd(10)} ${head.padEnd(11)} ;`);
+    }
+  }
+  lines.push("");
+  lines.push("[PIPES]");
+  lines.push(";ID       Node1      Node2      Length  Diameter  Roughness  MinorLoss");
+  for (const pipe of pipes) {
+    const id = (pipe._id || pipe.code || "?").toString();
+    const n1 = (pipe.startNode?._id || pipe.startNode).toString();
+    const n2 = (pipe.endNode?._id || pipe.endNode).toString();
+    const len = (pipe.length || 100).toString();
+    const dia = (pipe.diameter || 100).toString();
+    const rough = getRoughness(pipe.material);
+    lines.push(` ${id.padEnd(10)} ${n1.padEnd(10)} ${n2.padEnd(10)} ${len.padEnd(8)} ${dia.padEnd(9)} ${rough.toString().padEnd(10)} 0 ;`);
+  }
+  lines.push("");
+  lines.push("[OPTIONS]");
+  lines.push("Units           LPS");
+  lines.push("Headloss        D-W");
+  lines.push("");
+  lines.push("[END]");
+  return lines.join("\n");
+}
+
+function getRoughness(material) {
+  switch (material?.toUpperCase()) {
+    case "PVC": return 0.0015;
+    case "PEHD": return 0.0015;
+    case "FONTE": return 0.26;
+    default: return 0.1;
+  }
+}
+
+
+
+
+
+import { Project, Workspace } from "epanet-js";
+
+/**
+ * Classe d'encapsulation du moteur EPANET en JavaScript (epanet-js)
+ * - Initialisation unique du module WASM
+ * - Lancement de simulation hydraulique à la demande
+ * - Extraction des pressions, débits, vitesses et pertes de charge
+ */
+export class HydraulicSimulator {
+  #workspace;
+  #initialized = false;
+
+  /**
+   * Initialise le workspace et charge le module WASM.
+   * Doit être appelé une seule fois au démarrage.
+   */
+  async init() {
+    if (this.#initialized) return;
+    try {
+      this.#workspace = new Workspace();
+      await this.#workspace.loadModule();
+      this.#initialized = true;
+      console.log("✅ Module WASM EPANET chargé avec succès");
+    } catch (error) {
+      console.error("❌ Échec du chargement du module EPANET :", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lance une simulation hydraulique à partir d'un contenu de fichier INP.
+   * Retourne les résultats structurés ou lève une erreur.
+   * @param {string} inpContent - Le contenu du fichier .inp
+   * @param {number} [timeoutMs=15000] - Timeout en millisecondes
+   * @returns {Promise<{nodes: Array, links: Array}>}
+   */
+  async run(inpContent, timeoutMs = 15000) {
+    if (!this.#initialized) {
+      throw new Error("Le simulateur n'est pas initialisé. Appelez init() d'abord.");
+    }
+    if (!inpContent || typeof inpContent !== "string") {
+      throw new Error("Le contenu INP est invalide.");
+    }
+
+    // Écriture du fichier dans le workspace virtuel
+    this.#workspace.writeFile("network.inp", inpContent);
+
+    const model = new Project(this.#workspace);
+    model.open("network.inp", "report.rpt", "");
+
+    // Timeout pour éviter un blocage infini
+    const runPromise = this._executeAndExtract(model);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("La simulation a dépassé le temps limite (" + timeoutMs/1000 + "s)")), timeoutMs)
+    );
+
+    try {
+      const results = await Promise.race([runPromise, timeoutPromise]);
+      return results;
+    } finally {
+      try { model.close(); } catch (e) { /* ignore */ }
+    }
+  }
+
+  // Méthode interne : résolution + extraction
+  async _executeAndExtract(model) {
+    // Lancement de la résolution hydraulique
+    const returnCode = model.solveH();
+    if (returnCode !== 0) {
+      // Récupération du rapport d'erreur
+      let report = "Indisponible";
+      try {
+        report = this.#workspace.readFile("report.rpt");
+      } catch (e) {}
+      throw new Error(
+        `La simulation hydraulique a échoué (code ${returnCode}).\nRapport EPANET :\n${report}`
+      );
+    }
+
+    // Extraction des résultats
+    const results = this._extractResults(model);
+    return results;
+  }
+
+  /**
+   * Extrait les pressions, charges, demandes (nœuds) et débits, vitesses, pertes (liens)
+   */
+  _extractResults(model) {
+    // Nombre total de nœuds (tous types confondus)
+    const numNodes =
+      model.getCount(model.NodeType.EN_JUNCTION) +
+      model.getCount(model.NodeType.EN_RESERVOIR) +
+      model.getCount(model.NodeType.EN_TANK);
+
+    // Nombre total de liens (tuyaux, pompes, vannes)
+    const numLinks =
+      model.getCount(model.LinkType.EN_PIPE) +
+      model.getCount(model.LinkType.EN_PUMP) +
+      model.getCount(model.LinkType.EN_VALVE);
+
+    const nodes = [];
+    const links = [];
+
+    // Parcours des nœuds (les index commencent à 1)
+    for (let i = 1; i <= numNodes; i++) {
+      const id = model.getNodeNameId(i);
+      const typeIndex = model.getNodeType(i);
+
+      // Pour les réservoirs, la pression n'a pas de sens physique, on met null
+      let pressure = null;
+      if (typeIndex !== model.NodeType.EN_RESERVOIR) {
+        pressure = model.getNodeValue(i, model.NodeValue.EN_PRESSURE);
+      }
+
+      nodes.push({
+        id: id,
+        pressure: pressure,
+        head: model.getNodeValue(i, model.NodeValue.EN_HEAD),
+        demand: model.getNodeValue(i, model.NodeValue.EN_DEMAND),
+      });
+    }
+
+    // Parcours des liens
+    for (let i = 1; i <= numLinks; i++) {
+      const id = model.getLinkNameId(i);
+      links.push({
+        id: id,
+        flow: model.getLinkValue(i, model.LinkValue.EN_FLOW),
+        velocity: model.getLinkValue(i, model.LinkValue.EN_VELOCITY),
+        headloss: model.getLinkValue(i, model.LinkValue.EN_HEADLOSS),
+        // Statut : 1 = ouvert, 0 = fermé (approximation)
+        status: model.getLinkValue(i, model.LinkValue.EN_STATUS) > 0 ? "Open" : "Closed",
+      });
+    }
+
+    return { nodes, links };
+  }
+}
+
+import { Project, Workspace } from "epanet-js";
+import { generateInpFile } from "./generateInpFile.js";
+
+let workspace;
+
+async function initSimulator(){
+
+    if(!workspace){
+
+        workspace=new Workspace();
+
+        await workspace.loadModule();
+
+        console.log(
+            "EPANET chargé ✅"
+        );
+
+    }
+
+}
+
+export async function runSimulation(nodes,pipes){
+
+    let model;
+
+    try{
+
+        await initSimulator();
+
+        const inpContent=
+            generateInpFile(
+                nodes,
+                pipes
+            );
+
+        console.log(inpContent);
+
+        // écrire dans le FS interne WASM
+        workspace.writeFile(
+            "network.inp",
+            inpContent
+        );
+
+        model=
+            new Project(workspace);
+
+        model.open(
+            "network.inp",
+            "report.rpt",
+            "output.out"
+        );
+
+        model.solveH();
+
+        return {
+            success:true
+        };
+
+    }catch(error){
+
+        console.error(
+            "Erreur simulation:",
+            error
+        );
+
+        throw error;
+
+    }finally{
+
+        if(model){
+
+            model.close();
+
+        }
+
+    }
+
+}
+
+
+/**
+ * Génère le contenu du fichier .inp pour EPANET
+ * @param {Array} nodes - Liste des nœuds peuplés avec leur pattern
+ * @param {Array} links - Liste des conduites
+ */
+export const generateInpFiles = (nodes, links) => {
+  let inp = "[TITLE]\nProjet Hydraulique Ngoa-Ekelle\n\n";
+
+  // 1. PATTERNS
+  // On extrait les patterns uniques pour les déclarer
+  inp += "[PATTERNS]\n;ID Multipliers\n";
+  const patterns = [];
+  nodes.forEach(node => {
+      if (node.pattern && !patterns.find(p => p._id === node.pattern._id)) {
+          patterns.push(node.pattern);
+      }
+  });
+
+  patterns.forEach(p => {
+      inp += `${p.name} ${p.multipliers.join(' ')}\n`;
+  });
+
+  // 2. JUNCTIONS
+  inp += "\n[JUNCTIONS]\n;ID Elevation Demand Pattern\n";
+  nodes.forEach(node => {
+      if (node.type === "Junction") {
+          const patternName = node.pattern ? node.pattern.name : "";
+          inp += `${node.name} ${node.elevation} ${node.baseDemand || 0} ${patternName}\n`;
+      }
+  });
+
+  // 3. RESERVOIRS
+  inp += "\n[RESERVOIRS]\n;ID Head\n";
+  nodes.forEach(node => {
+      if (node.type === "Reservoir") {
+          inp += `${node.name} ${node.elevation}\n`;
+      }
+  });
+
+  // 4. PIPES
+  inp += "\n[PIPES]\n;ID Node1 Node2 Length Diameter Roughness\n";
+  links.forEach(link => {
+      // En supposant que link.nodeFrom et link.nodeTo contiennent les noms/codes des nœuds
+      inp += `${link.name} ${link.nodeFrom} ${link.nodeTo} ${link.length} ${link.diameter} ${link.roughness}\n`;
+  });
+
+  // 5. OPTIONS (Essentiel pour gérer les patterns)
+  inp += "\n[OPTIONS]\n";
+  inp += "UNITS LPS\n"; // Litres par seconde
+  inp += "HEADLOSS H-W\n"; // Hazen-Williams
+  inp += "DURATION 24:00\n";
+  inp += "HYDRAULICS YES\n";
+
+  return inp;
+};

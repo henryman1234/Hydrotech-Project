@@ -1,0 +1,21 @@
+// override variables
+// $primary: #e203bd;
+
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
+
+// add colors to bootstap
+$custom-colors: (
+    "henry": rgb(235, 162, 5),
+) ;
+
+$theme-colors: map-merge($theme-colors, $custom-colors);
+
+$utilities-text-colors: map-merge($utilities-text-colors, $custom-colors);
+
+$utilities-bg-colors: map-merge($utilities-bg-colors, $custom-colors);
+
+@import "bootstrap/scss/bootstrap";

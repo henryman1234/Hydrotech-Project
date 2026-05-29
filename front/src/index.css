@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+@theme {
+
+};
+/* @variant light (&:where (.light, .light *)); */
+@variant dark (&:where(.dark, .dark *));
+
+
+
+
+body {
+  /* background-color: #fcfbfc; */
+  text-decoration: none !important; 
+}
+
+/* a {
+    color: inherit !important;
+} */
+
+
+@keyframes scanLoop {
+    0% {
+      top: -10%; /* Commence un peu au-dessus pour apparaître en douceur */
+      opacity: 0;
+    }
+    10% {
+      opacity: 1; /* Devient visible rapidement */
+    }
+    90% {
+      opacity: 1; /* Reste visible pendant la descente */
+    }
+    100% {
+      top: 100%; /* Sort par le bas */
+      opacity: 0; /* Disparaît juste avant de reset */
+    }
+  }
+  
+  .animate-scan {
+    position: absolute;
+    /* On enlève 'alternate', on garde 'infinite' */
+    animation: scanLoop 4s linear infinite;
+  }
+
+
+  
+
+@layer utilities {
+
+/* MODE CLAIR SCROLLBAR */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full border-2 border-transparent bg-clip-content;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400;
+}
+
+.scrollbar-thin2::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-thin2::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.scrollbar-thin2::-webkit-scrollbar-thumb {
+  @apply bg-slate-400 rounded-full border-2 border-transparent bg-clip-content;
+}
+
+.scrollbar-thin2::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-500;
+}
+
+
+/* MODE DARK SCROLLABR */
+  .dark .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-slate-700 rounded-full border-2 border-transparent bg-clip-content;
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-600;
+  }
+
+  .dark .scrollbar-thin2::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .dark .scrollbar-thin2::-webkit-scrollbar-thumb {
+    @apply bg-slate-600 rounded-full border-2 border-transparent bg-clip-content;
+  }
+
+  .dark .scrollbar-thin2::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400;
+  }
+
+
+};
+
+
+.conduite-style  {
+  cursor: pointer !important;
+}
