@@ -17,7 +17,7 @@ const httpServer = http.createServer(app)
 
 const allowedOrigins = [
     "http://localhost:5173",
-    "https://hydrotech-zeta.vercel.app"
+    "https://hydrotech-rouge.vercel.app"
 ]
 
 const corsOptions = {
