@@ -76,13 +76,13 @@ const Network = function () {
 
   console.log("Résultats spécifiques à une heure: ",resultsData)
 
-  // const  {data: allResults} = useQuery({
-  //   queryKey: ["all-results"],
-  //   queryFn: networkService.fetchSimulatedResults,
-  //   refetchInterval: 1000
-  // })
+  const  {data: allResults} = useQuery({
+    queryKey: ["all-results"],
+    queryFn: networkService.fetchSimulatedResults,
+    refetchInterval: 1000
+  })
 
-  // console.log("Tous les resultats: ", allResults)
+  console.log("Tous les resultats: ", allResults)
 
   
   const position:[number, number] = [3.854933,  11.500602];

@@ -3,7 +3,7 @@ import { runSimulations } from "../utils/hydraulicService.js";
 import { getAllNodes } from "./nodesController.js";
 import { fetchPipes } from "./pipesController.js";
 
-export const simulationsResultsController = async function (req, res) {
+export const monitoringResultsController = async function (req, res) {
     try {
 
         const requestedHour = parseInt(req.query.hour) || new Date().getHours();

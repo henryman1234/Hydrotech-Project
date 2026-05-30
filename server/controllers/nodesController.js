@@ -43,3 +43,9 @@ export const getAllNodes = async function () {
     return nodes
 }
 
+// Recuperer un noeud particuler
+export const getNode  = async  function (id) {
+    const node = await Node.findById(id).lean()
+    return node
+}
+
