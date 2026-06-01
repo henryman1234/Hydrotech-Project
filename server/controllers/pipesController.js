@@ -23,3 +23,9 @@ export const fetchPipes = async function () {
     const pipes = await Pipe.find().lean()
     return pipes
 }
+
+//Recuperer une conduite
+export const getPipe = async (id) => {
+    const pipe = await Pipe.findById(id).lean();
+    return pipe
+}

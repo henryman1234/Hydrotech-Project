@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {MapContainer, TileLayer, Popup, Marker, Polyline} from "react-leaflet"
 import "leaflet/dist/leaflet.css";
 import { useQuery } from "@tanstack/react-query";
 import { nodeService } from "../../../services/nodeService";
-import Pin from "../components/Pin";
+import Pin, { type AlertType } from "../components/Pin";
 import { pipeService } from "../../../services/pipeService";
 import Pipe from "../components/Pipe";
 import { networkService } from "../../../services/networkService";
-import Simulation from "./Simulation";
 import SimulationInfo from "../components/SimulationInfo";
+import { simulationService } from "../../../services/simulationService";
 
 
 export type PipeData = {
@@ -41,120 +41,195 @@ export type NodeData = {
   }
 }
 
-const Network = function () {
+const Network = () => {
 
-  const date = new Date();
-  const localHour = date.getHours()
+  const [currentHour, setCurrentHour] = useState(
+      () => new Date().getHours()
+  );
 
-  const [currentHour, setCurrentHour] = useState(() => {
-    return localHour;
-  })
+  const currentDay = new Date().toLocaleDateString("fr-FR");
 
-  const currentDay = new Date().toLocaleDateString("fr-FR")
-
-  // Mise à jour automatique si l'heure change
+  /**
+   * ⏱ Sync heure locale
+   */
   useEffect(() => {
-    const interval = setInterval(() => {
-      const newHour = new Date().getHours();
-      if (newHour !== currentHour) {
-        setCurrentHour(newHour);
-      }
-    }, 60000); // Vérifie chaque minute
+      const interval = setInterval(() => {
+          const newHour = new Date().getHours();
+          setCurrentHour(prev => (prev !== newHour ? newHour : prev));
+      }, 60000);
 
-    return () => clearInterval(interval);
-  }, [currentHour]);
+      return () => clearInterval(interval);
+  }, []);
 
-  console.log("CurrentHour: ", currentHour)
+  /**
+   * 📊 Simulation API
+   */
+  const { data: resultsData } = useQuery({
+      queryKey: ["results-per-hours", currentHour],
+      queryFn: () => simulationService.fetchSimulationsByHour(currentHour),
+      refetchInterval: 5000
+  });
 
-  const {data: resultsData} = useQuery({
-    queryKey: ["all-results-by-hour", currentHour],
-    queryFn: () => networkService.fetchSimulatedResultsByHour(currentHour),
-    refetchInterval: 5000
-  })
 
-  const currentSnapshot = resultsData?.data
-
-  console.log("Résultats spécifiques à une heure: ",resultsData)
-
-  const  {data: allResults} = useQuery({
+  // Tous les snapshot
+  const {data: snapshots} = useQuery({
     queryKey: ["all-results"],
     queryFn: networkService.fetchSimulatedResults,
-    refetchInterval: 1000
+    refetchInterval: 5000
   })
+  const currentSnapshot = resultsData?.data;
 
-  console.log("Tous les resultats: ", allResults)
 
+  console.log("Résultats spécifiques à une heure: ", resultsData)
+  console.log("Tous les snapshots: ", snapshots)
+
+
+  /**
+   * =========================
+   * ⚠️ ALERTES NOEUDS
+   * =========================
+   */
+
+  const negativePressureIds = useMemo(() => {
+      return new Set(
+          (resultsData?.warnings?.pressures?.negative || []).map(
+              (n: any) => String(n._id)
+          )
+      );
+  }, [resultsData]);
+
+  const lowPressureIds = useMemo(() => {
+      return new Set(
+          (resultsData?.warnings?.pressures?.low || []).map(
+              (n: any) => String(n._id)
+          )
+      );
+  }, [resultsData]);
+
+  console.log("Resultats de surveillance: ", lowPressureIds, negativePressureIds)
   
-  const position:[number, number] = [3.854933,  11.500602];
 
-  const  {isLoading, error, data:nodes} = useQuery({
-    queryKey: ["water-nodes"],
-    queryFn: nodeService.all,
-    refetchInterval: 5000
-  })
+  /**
+   * =========================
+   * ⚠️ ALERTES CONDUITES
+   * =========================
+   */
 
-  const  {data:pipes} = useQuery({
-    queryKey: ["water-pipes"],
-    queryFn: pipeService.all,
-    refetchInterval: 5000
-  })
-
-    if (isLoading) {
-      return (
-        <div className="text-base text-slate-800 dark:text-white">
-          Chargement de la carte en cours...
-        </div>
-      )
-    }
-
-    if (error) {
-      console.log("Une érreur est survénue: ", error?.message)
-    }
-
-    return (
-        <MapContainer 
-            center={position} 
-            zoom={30} 
-            scrollWheelZoom={false}
-            style={{width: "100%", height: "100vh"}}
-        >
-
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        {/* Simulation Data */}
-        <SimulationInfo 
-          hour={currentHour} 
-          date={currentDay}
-        />
-
-        {/* Adding nodes */}
-       {nodes?.data?.map(function(node: NodeData){
-          return (
-            <Pin
-              key={node?._id}
-              node={node}
-              dynamicData={currentSnapshot?.nodes?.[node._id]}
-            />
+  const lowVelocityIds = useMemo(() => {
+      return new Set(
+          (resultsData?.warnings?.velocities?.low || []).map(
+              (p: any) => String(p._id)
           )
-       })}
+      );
+  }, [resultsData]);
 
-
-        {/* Adding pipes */}
-        {pipes?.data?.map(function(pipe: PipeData){
-          return (
-            <Pipe 
-              pipe={pipe} 
-              key={pipe?._id}
-              dynamicData={currentSnapshot?.links?.[pipe._id]}
-            />
+  const highVelocityIds = useMemo(() => {
+      return new Set(
+          (resultsData?.warnings?.velocities?.great || []).map(
+              (p: any) => String(p._id)
           )
-        })}
+      );
+  }, [resultsData]);
 
+  console.log("Resultats de surveillance: ", lowVelocityIds, highVelocityIds)
+
+  const position: [number, number] = [3.854933, 11.500602];
+
+  /**
+   * =========================
+   * 🧱 LOADING
+   * =========================
+   */
+  const { data: nodes, isLoading, error } = useQuery({
+      queryKey: ["water-nodes"],
+      queryFn: nodeService.all,
+      refetchInterval: 5000
+  });
+
+  const { data: pipes } = useQuery({
+      queryKey: ["water-pipes"],
+      queryFn: pipeService.all,
+      refetchInterval: 5000
+  });
+
+  if (isLoading) {
+      return <div>Chargement de la carte...</div>;
+  }
+
+  if (error) {
+      return <div>Erreur de chargement</div>;
+  }
+
+  return (
+      <MapContainer
+          center={position}
+          zoom={30}
+          scrollWheelZoom={false}
+          style={{ width: "100%", height: "100vh" }}
+      >
+          <TileLayer
+              attribution="&copy; OpenStreetMap contributors"
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          <SimulationInfo
+              hour={currentHour}
+              date={currentDay}
+          />
+
+          {/* =========================
+              🟢 NŒUDS
+          ========================= */}
+          {nodes?.data?.map((node: NodeData) => {
+
+
+              const dynamicNode = currentSnapshot?.nodes?.[node._id];
+
+              const isNegative = negativePressureIds.has(node._id);
+
+              const isLowPressure = lowPressureIds.has(node._id);
+
+              let alertType: AlertType = "normal";
+
+              if (isNegative) alertType = "negative-pressure";
+
+              else if (isLowPressure) alertType = "low-pressure";
+
+              return (
+                  <Pin
+                      key={node._id}
+                      node={node}
+                      dynamicData={dynamicNode}
+                      alertType={alertType}
+                  />
+              );
+          })}
+
+          {/* =========================
+              🔵 CONDUITES
+          ========================= */}
+          {pipes?.data?.map((pipe: PipeData) => {
+
+
+              const dynamicPipe = currentSnapshot?.links?.[pipe?._id];
+
+              const isLowVelocity = lowVelocityIds.has(pipe._id);
+
+              const isHighVelocity = highVelocityIds.has(pipe._id);
+
+              return (
+                  <Pipe
+                      key={pipe?._id}
+                      pipe={pipe}
+                      dynamicData={dynamicPipe}
+                      isLowVelocity={isLowVelocity}
+                      isHighVelocity={isHighVelocity}
+                  />
+              );
+          })}
       </MapContainer>
-    )
-}
+  );
+};
+
 
 export default Network

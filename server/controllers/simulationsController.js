@@ -1,3 +1,6 @@
+import { detectGreatVelocity } from "../utils/detectGreatVelocity.js";
+import { detectLowPressures } from "../utils/detectLowPressures.js";
+import { detectLowVelocity } from "../utils/detectLowVelocity.js";
 import { detectNegativePressures } from "../utils/detectNegativePressures.js";
 import { runSimulations } from "../utils/hydraulicServiceSimulation.js";
 import { getAllNodes } from "./nodesController.js";
@@ -29,9 +32,28 @@ export const simulationsController = async function (req, res) {
             }
         })
 
+        const pipesArray = Object.entries(snapshot.links).map(([_id, data]) => {
+            return {
+                ...data,
+                _id
+            }
+        })
+
 
         // On recherche des noueds avec une pression négative
-        const negativePressures = detectNegativePressures(nodesArray)
+        const negativePressures = await detectNegativePressures(nodesArray)
+
+        // On recherche les noueds avec une pressions négatives
+        const lowPressures = await detectLowPressures(nodesArray)
+
+        // Vitesses trop faibles
+        const lowVelocity = await detectLowVelocity(pipesArray)
+
+        // Vitesses trop grandes
+        const greatVelocity = await detectGreatVelocity(pipesArray)
+
+        console.log("vitesses faibles : " ,lowVelocity)
+        console.log("grandes vitesses : " ,greatVelocity)
 
         if (!snapshot) {
             return res.status(404).json({
@@ -47,8 +69,18 @@ export const simulationsController = async function (req, res) {
             hour: requestedHour,
             data: snapshot,
             warnings: {
-                hasIssue: negativePressures.length > 0 ,
-                negativePressures: negativePressures
+                hasIssue: negativePressures.length > 0 || lowPressures.length > 0 || lowVelocity.length > 0  || greatVelocity.length > 0,
+                
+                pressures: {
+                    negative: negativePressures,
+                    low: lowPressures
+                },
+
+                velocities: {
+                    low: lowVelocity,
+                    great: greatVelocity
+                }
+
             }
         });
 

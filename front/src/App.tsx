@@ -3,18 +3,17 @@ import {createBrowserRouter, RouterProvider} from "react-router-dom"
 import Home from './pages/home/Home';
 import {Toaster} from "sonner"
 import AuthPage from './pages/auth/AuthPage';
-import Dashboard from './pages/dashboard/DashboardLayout';
 import About from './pages/about/About';
 import {Layout , RequireAuthLayout} from "./pages/layout/Layout"
 import { ThemeContextProvider } from './contexts/ThemeContext';
 import Inventory from './pages/dashboard/pages/Inventory';
-import Settings from './pages/dashboard/pages/Settings';
 import Calendar from './pages/dashboard/pages/Calendar';
 import Messages from './pages/dashboard/pages/Messages';
 import Main from './pages/dashboard/pages/Main';
 import DashboardLayout from './pages/dashboard/DashboardLayout';
 import Network from './pages/dashboard/pages/Network';
-import Simulation from './pages/dashboard/pages/Simulation';
+import SimulationTest from './pages/dashboard/pages/SimulationTest';
+import Survey from './pages/dashboard/pages/Survey';
 
 
 function App() {
@@ -68,11 +67,15 @@ function App() {
             },
             {
               path: "simulation",
-              element: <Simulation/>
+              element: <SimulationTest/>
             },
             {
               path: "calendar",
               element: <Calendar/>
+            },
+            {
+              path: "survey",
+              element: <Survey/>
             }
           ]
         },

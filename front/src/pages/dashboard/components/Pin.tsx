@@ -1,63 +1,121 @@
-import React from "react";
 import { Marker, Popup } from "react-leaflet";
-import L from "leaflet"
+import L from "leaflet";
 import type { NodeData } from "../pages/Network";
 
+export type AlertType =
+    | "negative-pressure"
+    | "low-pressure"
+    | "normal";
 
+type PinProps = {
+    node: NodeData;
+    dynamicData?: {
+        pressure?: number | string;
+        elevation?: number | string;
+        demand?: number | string;
+        baseDemand?: number | string;
+    };
+    alertType?: AlertType;
+};
 
+const blueIcon = new L.Icon({
+    iconUrl:
+        "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+    iconSize: [25, 41],
+});
 
-const Pin = function ({node, dynamicData}: {node: NodeData, dynamicData: any}) {
+const orangeIcon = new L.Icon({
+    iconUrl:
+        "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png",
+    iconSize: [25, 41],
+});
 
-    const position: [number, number] = [node.location?.coordinates[0], node.location?.coordinates[1]]
+const redIcon = new L.Icon({
+    iconUrl:
+        "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+    iconSize: [25, 41],
+});
 
+const Pin = ({
+    node,
+    dynamicData,
+    alertType = "normal"
+}: PinProps) => {
 
-    // Personnaliser les icones
-    const getIcon = function (type: string) {
-        return new L.Icon({
-            iconUrl: "" ,
-            iconSize: [25, 25]
-        })
-    }
+    const position: [number, number] = [
+        Number(node.location.coordinates[0]),
+        Number(node.location.coordinates[1]),
+    ];
+
+    const icon = (() => {
+        switch (alertType) {
+            case "negative-pressure":
+                return redIcon;
+            case "low-pressure":
+                return orangeIcon;
+            default:
+                return blueIcon;
+        }
+    })();
 
     return (
-        <div className="">
+        <Marker position={position} icon={icon}>
+            <Popup>
+                <div className="bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 text-slate-800 w-full border p-4 rounded-2xl border-slate-200/50 dark:border-slate-700/50 dark:text-white">
 
-           <Marker position={position}>
+                    <div className="border-b border-slate-200/50 dark:border-slate-500/50 pb-2 mb-2">
+                        <h4 className="font-semibold text-sm">
+                            {node.name}
+                        </h4>
 
-                <Popup >
-                    <div className="bg-white/80 backdrop-blur-xl  dark:bg-slate-900/80 text-slate-800 w-full border p-4 rounded-2xl border-slate-200/50 dark:border-slate-700/50 dark:text-white" >
+                        <p className="text-xs text-slate-500">
+                            {node.type}
+                        </p>
+                    </div>
 
-                        <div className="border-b  border-slate-200/50 dark:border-slate-500/50 pb-2">
+                    <div className="space-y-1 text-sm">
 
-                            <h4 className="font-semibold  text-sm">{node?.name}</h4>
+                        <p>
+                            <strong>Altitude :</strong> {node.elevation} m
+                        </p>
 
-                        </div>
-                        <div className="text-sm">
-                            <p className="">
-                                altitude: {node?.elevation} m
-                            </p>
-                            <p className="">
-                                Pression actuelle: {dynamicData?.pressure}
-                            </p> 
-                            <p className="">
-                                Altimétrie: {dynamicData?.elevation}
-                            </p>
-                            <p className="">
-                                Demande de base: {node.baseDemand} L/s
-                            </p>
-                            <p className="">
-                                Demande réelle: {dynamicData?.demand} L/s
-                            </p>
+                        <p>
+                            <strong>Pression :</strong>{" "}
+                            {dynamicData?.pressure ?? "--"} mCE
+                        </p>
 
-                        </div>
-                       
+                        <p>
+                            <strong>Altimétrie :</strong>{" "}
+                            {dynamicData?.elevation ?? "--"} m
+                        </p>
+
+                        <p>
+                            <strong>Demande de base :</strong>{" "}
+                            {node.baseDemand ?? 0} L/s
+                        </p>
+
+                        <p>
+                            <strong>Demande réelle :</strong>{" "}
+                            {dynamicData?.demand ?? "--"} L/s
+                        </p>
+
+                        {alertType === "negative-pressure" && (
+                            <div className="mt-3 rounded-lg border border-red-300 bg-red-50 p-2 text-red-700 font-medium">
+                                ⚠️ Pression négative détectée
+                            </div>
+                        )}
+
+                        {alertType === "low-pressure" && (
+                            <div className="mt-3 rounded-lg border border-orange-300 bg-orange-50 p-2 text-orange-700 font-medium">
+                                ⚠️ Pression insuffisante (&lt; 10 mCE)
+                            </div>
+                        )}
 
                     </div>
-                </Popup>
-            </Marker>
+                </div>
+            </Popup>
+        </Marker>
+    );
+};
 
-        </div>
-    )
-}
-
-export default Pin
+export default Pin;

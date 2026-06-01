@@ -16,7 +16,7 @@ export const detectNegativePressures =  async (nodes) => {
             const identifiedNode = await getNode(node._id || node.id )
             
             return {
-                id: node._id || node.id ,
+                _id: node._id || node.id ,
                 name: identifiedNode.name,
                 type: identifiedNode.type,
                 pressure: node.pressure

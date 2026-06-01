@@ -80,9 +80,9 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
             icon: ComputerIcon
         },
         {
-            id: "settings",
+            id: "survey",
             icon: Settings,
-            label: "Paramètres"
+            label: "Survey"
         }
     ];
 

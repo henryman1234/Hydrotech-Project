@@ -1,11 +1,11 @@
 import React from "react";
 
-const Settings = function () {
+const Survey = function () {
     return (
         <div className="">
-            Settind
+            la surveillance 2
         </div>
     )
 }
 
-export default Settings
+export default Survey

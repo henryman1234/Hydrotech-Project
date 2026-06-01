@@ -10,6 +10,7 @@ import pipesRouter from "./routes/pipes.js"
 import monitoringRouter from "./routes/monitoring.js"
 import patternRouter from "./routes/pattern.js";
 import simulationsRouter from "./routes/simulation.js";
+import mainRouter from "./routes/main.js";
 dotenv.config()
 
 const app = express()
@@ -41,14 +42,15 @@ app.use(cookieParser())
 app.use(cors(corsOptions))
 
 
-
 // Routes
 app.use("/api/auth", authRouter )
 app.use("/api/patterns", patternRouter)
 app.use("/api/nodes", nodesRouter)
 app.use("/api/pipes", pipesRouter);
-app.use("/api/monitoring", monitoringRouter);  
 app.use("/api/simulations", simulationsRouter);
+app.use("/api/monitoring", monitoringRouter);  
+app.use("/api/main", mainRouter);
+
 
 // Handle Errors
 app.use(function (err, req, res, next) {

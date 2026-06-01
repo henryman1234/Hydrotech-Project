@@ -1,12 +1,31 @@
-import { detectGreatVelocity } from "../utils/detectGreatVelocity.js";
-import { detectLowPressures } from "../utils/detectLowPressures.js";
-import { detectLowVelocity } from "../utils/detectLowVelocity.js";
-import { detectNegativePressures } from "../utils/detectNegativePressures.js";
-import { runSimulations } from "../utils/hydraulicService.js";
-import { getAllNodes } from "./nodesController.js";
+import mongoose from "mongoose";
 import { fetchPipes } from "./pipesController.js";
+import { getAllNodes } from "./nodesController.js";
+import { runSimulations } from "../utils/hydraulicService.js";
 
-export const monitoringResultsController = async function (req, res) {
+export const totalNetworkLenght =  async (req, res) => {
+    try {
+        const pipes = await fetchPipes();
+        let sum = 0
+
+        const result = pipes.reduce((sum, pipe)=> {
+            return sum += Number(pipe.length);
+        }, sum)
+
+        res.status(200).json({
+            status: "success",
+            totalLenght: result,
+            totalLenghtKilo: Number((result / 1000).toFixed(2))
+        })
+        
+    } catch (error) {
+        console.log("Failed to compute the lenght of the Network: " , error);
+        throw new Error("Something went wrong")
+    }
+}
+
+// Vitesse la plus pétite
+export const getSmallestVelocity = async function (req, res) {
     try {
 
         const requestedHour = parseInt(req.query.hour) || new Date().getHours();
