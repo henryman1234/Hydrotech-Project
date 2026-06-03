@@ -23,9 +23,9 @@ const allowedOrigins = [
 const corsOptions = {
     origin: function (origin, callback) {
         if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true)
+            return callback(null, true)
         } else {
-            callback(new Error("Origine non-authorisé"), false)
+            return callback(new Error("Origine non-authorisé"), false)
         }
     },
     methods: ["GET", "PUT", "DELETE", "PATCH", "POST"],
