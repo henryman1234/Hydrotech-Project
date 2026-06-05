@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 import { fetchPipes } from "./pipesController.js";
 import { getAllNodes } from "./nodesController.js";
 import { runSimulations } from "../utils/hydraulicService.js";
+import { detectNegativePressures } from "../utils/detectNegativePressures.js";
+import { detectLowPressures } from "../utils/detectLowPressures.js";
+import { detectLowVelocity } from "../utils/detectLowVelocity.js";
+import { detectGreatVelocity } from "../utils/detectGreatVelocity.js";
 
 export const totalNetworkLenght =  async (req, res) => {
     try {
@@ -25,7 +29,7 @@ export const totalNetworkLenght =  async (req, res) => {
 }
 
 // Vitesse la plus pétite
-export const getSmallestVelocity = async function (req, res) {
+export const getVelocity = async function (req, res) {
     try {
 
         const requestedHour = parseInt(req.query.hour) || new Date().getHours();
@@ -71,8 +75,6 @@ export const getSmallestVelocity = async function (req, res) {
         // Vitesses trop grandes
         const greatVelocity = await detectGreatVelocity(pipesArray)
 
-        console.log("vitesses faibles : " , lowVelocity)
-        console.log("grandes vitesses : " , greatVelocity)
 
         if (!snapshot) {
             return res.status(404).json({
@@ -85,22 +87,9 @@ export const getSmallestVelocity = async function (req, res) {
         // 5. Retour du snapshot filtré
         res.status(200).json({
             success: true,
+            title: "La plus pétite et grande vitesse",
             hour: requestedHour,
             data: snapshot,
-            warnings: {
-                hasIssue: negativePressures.length > 0 || lowPressures.length > 0 || lowVelocity.length > 0  || greatVelocity.length > 0,
-                
-                pressures: {
-                    negative: negativePressures,
-                    low: lowPressures
-                },
-
-                velocities: {
-                    low: lowVelocity,
-                    great: greatVelocity
-                }
-
-            }
         });
 
     } catch (error) {
@@ -108,3 +97,53 @@ export const getSmallestVelocity = async function (req, res) {
         res.status(500).json({ success: false, message: "Erreur lors de la récupération des résultats." });
     }
 }
+
+
+export const demandVsFlowController = async function (req, res) {
+    try {
+
+        const nodes = await getAllNodes();
+        const pipes = await fetchPipes();
+
+        const simulationData = await runSimulations(nodes, pipes);
+
+        const results = simulationData.data.times.map((t) => {
+
+            const nodesArray = Object.entries(t.nodes).map(([_id, data]) => ({
+                ...data,
+                _id
+            }));
+
+            // Demande totale
+            const totalDemand = Object.values(t.nodes)
+                .filter(n => Number(n.demand) > 0)
+                .reduce((acc, n) => acc + Number(n.demand), 0);
+
+            // Débit injecté (réservoir)
+            const totalFlow = Math.abs(
+                Object.values(t.nodes)
+                    .filter(n => Number(n.demand) < 0)
+                    .reduce((acc, n) => acc + Number(n.demand), 0)
+            );
+
+            return {
+                heure: Math.floor(t["Heure"]),
+                demandeTotale: totalDemand,
+                DébitInjecté: totalFlow
+            };
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: results
+        });
+
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Erreur calcul courbe demande vs débit"
+        });
+    }
+};

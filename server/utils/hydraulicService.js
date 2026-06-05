@@ -6,6 +6,8 @@ import {
 } from "epanet-js";
 
 import { generateInpFile } from "./generateInpFile.js";
+import path, { dirname } from "node:path"
+import { fileURLToPath } from "node:url";
 
 let workspace;
 
@@ -43,11 +45,20 @@ export async function runSimulations(nodes,pipes){
 
         const inpContent = generateInpFile (nodes, pipes)
 
-        workspace.writeFile("network.inp", inpContent);
+        const dir = dirname(fileURLToPath(import.meta.url))
+
+        const inpPath = path.join(dir, "../network.inp");
+        const rptPath = path.join(dir, "../report.rpt");
+        const outPath = path.join(dir, "../output.out");
+        
+
+        workspace.writeFile(inpPath , inpContent);
+        // workspace.writeFile("network.inp", inpContent);
 
         model = new Project(workspace);
 
-        model.open("network.inp","report.rpt","output.out");
+        model.open(inpPath ,rptPath ,outPath);
+        // model.open("network.inp","report.rpt","output.out");
 
         const date = new Date()
 

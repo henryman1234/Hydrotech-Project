@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, PiIcon } from "lucide-react"
+import { ArrowDown, ArrowRightToLine, ArrowUp, PiIcon, Ruler } from "lucide-react"
 import React from "react"
 import { mainService } from "../../../services/mainService"
 import { useQuery } from "@tanstack/react-query"
@@ -25,15 +25,15 @@ const LinearStats =  () => {
                     <p className="text-3xl font-bold mb-2 text-slate-800 dark:text-white transition-colors">{linear?.totalLenghtKilo} Km</p>
 
                     <div className="flex items-center space-x-2">
-                        <ArrowUp className="h-4 w-4 text-emerald-500"/>
-                        <span className={`text-sm font-semibold  text-emerald-500`}>Hausse</span>
-                        <span className="text-slate-500 dark:text-slate-400 text-sm">vs Ancien</span>
+                        <ArrowRightToLine className="h-4 w-4 text-emerald-500"/>
+                        <span className={`text-sm font-semibold  text-emerald-500`}>Stable</span>
+                        <span className="text-slate-500 dark:text-slate-400 text-sm">depuis la pose</span>
                     </div>
                 </div>
                 
                 {/* second */}
                 <div className={`p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 group-hover:scale-110 transition-all duration-200`}>
-                    <PiIcon  className={`w-6 h-6  text-emerald-600 dark:text-emerald-400  `}/>
+                    <Ruler  className={`w-6 h-6  text-emerald-600 dark:text-emerald-400  `}/>
                 </div>
 
             </div>

@@ -16,6 +16,7 @@ export type PipeData = {
   code: string,
   diameter: number,
   material: string
+  velocity?: number, 
   length: number,
   startNode: {
     location: {

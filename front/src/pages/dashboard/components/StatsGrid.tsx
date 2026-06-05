@@ -3,6 +3,9 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { mainService } from "../../../services/mainService";
 import LinearStats from "./LinearStats";
+import SmallVelocityStat from "./SmallVelocityStat";
+import GreatVelocityStat from "./greatVelocityStat";
+import GreatPressureStat from "./greatPressureStat";
 
 export const Stats = [
     {
@@ -63,6 +66,9 @@ const StatsGrid:React.FC = function () {
         })} */}
 
         <LinearStats/>
+        <SmallVelocityStat/>
+        <GreatVelocityStat/>
+        <GreatPressureStat/>
 
         </div>)
     }

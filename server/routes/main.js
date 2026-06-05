@@ -1,9 +1,11 @@
 import express from "express"
-import {totalNetworkLenght } from "../controllers/mainController.js";
+import {demandVsFlowController, getVelocity, totalNetworkLenght } from "../controllers/mainController.js";
 
 const router = express.Router();
 
 router.get("/linear", totalNetworkLenght);
-// router.get("/smallest-velo", getSmallestVelocity)
+router.get("/get-details", getVelocity )
+router.get("/demand-vs-flow", demandVsFlowController)
+
 
 export default router
