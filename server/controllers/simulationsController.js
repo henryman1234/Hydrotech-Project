@@ -6,7 +6,7 @@ import { runSimulations } from "../utils/hydraulicServiceSimulation.js";
 import { getAllNodes } from "./nodesController.js";
 import { fetchPipes } from "./pipesController.js";
 
-export const simulationsController = async function (req, res) {
+export const simulations = async function (req, res) {
     try {
 
         const requestedHour = parseInt(req.query.hour) || new Date().getHours();

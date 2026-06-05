@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 import express from "express";
 import { authMiddleware } from "../middleware/authMiddleware.js";
-import { simulationsController } from "../controllers/SimulationsController.js";
+import { simulations } from "../controllers/simulationsController.js";
 
 const router = express.Router();
 
-router.get("/", authMiddleware, simulationsController)
+router.get("/", authMiddleware, simulations)
 
 export default router;
