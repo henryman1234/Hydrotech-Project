@@ -569,3 +569,6 @@ export const generateInpFiles = (nodes, links) => {
 
   return inp;
 };
+
+
+kkdkdkkdkdkdkdkkkdkkdd
