@@ -121,7 +121,7 @@ export class AuthController  {
     }
 
     static async logout (req, res) {
-        res.cookie("access_token", "", {maxAge: 0})
+        res.clearCookie("access_token")
         res.status(200).json({message: "Déconnecté avec succès !"})
     }
 }
