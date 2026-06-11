@@ -130,7 +130,7 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
 
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto scrollbar-thin  space-y-2  p-4 ">
+            <nav className="md:flex-1 overflow-y-auto scrollbar-thin  space-y-2  p-4 ">
                 {menuItems.map(function(item) {
                     const Icon = item.icon
                     return (
@@ -176,7 +176,7 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
             
 
             {/* User Profile */}
-            {!collapse && <div className="p-4 border-t border-slate-200/50 dark:border-slate-700/50">
+            {!collapse && <div className="p-4 border-t border-slate-200/50 dark:border-slate-700/50 mt-6">
 
                 <div className=" items-center hidden  md:flex space-x-3 pl-3 border-l border-slate-200 dark:border-slate-700">
 
