@@ -40,11 +40,16 @@ const Navbar =  function () {
     const queryClient = useQueryClient();
 
     const mutation = useMutation({
+
         mutationFn: authService.logout,
+        
         onSuccess: () => {
             toast.success("Déconnecté avec succès !")
+
             updateUser(null);
+            
             queryClient.clear();
+            // queryClient.invalidateQueries({queryKey:["auth"]})
         },
         onError: (error: any) => {
             const message = error?.response?.data.message;

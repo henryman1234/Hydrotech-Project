@@ -3,7 +3,7 @@ import {z} from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { authService } from "../../../services/authService"
 import { toast } from "sonner"
 import { Loader2, Lock, User } from "lucide-react"
@@ -26,10 +26,14 @@ const LoginForm:React.FC<LoginFormProps> = function ({onSwitch}) {
     
     const  navigate = useNavigate();
 
+    const client = useQueryClient()
+
     const {register, handleSubmit, formState: {errors}} = useForm({resolver: zodResolver(loginSchema)})
 
     const mutation = useMutation({
+
         mutationFn: authService.login,
+
         onSuccess: (data) => {
             
             const {user} = data
@@ -37,6 +41,8 @@ const LoginForm:React.FC<LoginFormProps> = function ({onSwitch}) {
             updateUser(user)
 
             toast.success("Bienvenue sur votre dashboard")
+
+            client.invalidateQueries({queryKey: ["auth"]})
 
             return navigate("/dashboard", {replace: true})
         },
@@ -72,7 +78,7 @@ const LoginForm:React.FC<LoginFormProps> = function ({onSwitch}) {
                     <label htmlFor="password" className="text-gray-700 mb-2 text-base ">Votre mot de passe</label>
                     <div className="mb-2 relative">
                         <Lock className="absolute inset-y-0 top-1/2 -translate-y-1/2 text-gray-400 size-5 mb-2 left-3"/>
-                        <input type="text" 
+                        <input type="password" 
                         placeholder="Saisissez votre mot de passe"
                         {...register("password")}
                         id="password"

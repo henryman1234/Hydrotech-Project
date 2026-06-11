@@ -35,11 +35,10 @@ export async function runSimulations(nodes,pipes){
     try{
 
         // await initSimulator();
+        
         // Chargement du moteur
         await workspace.loadModule();
 
-        // Chargement du moteur
-        await workspace.loadModule();
 
         const inpContent = generateInpFileSimulation(nodes, pipes)
 
