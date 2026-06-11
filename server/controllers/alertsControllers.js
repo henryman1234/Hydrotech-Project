@@ -1,12 +1,15 @@
-import { detectGreatVelocity } from "../utils/detectGreatVelocity.js";
+import mongoose from "mongoose";
+import { fetchPipes } from "./pipesController.js";
+import { getAllNodes } from "./nodesController.js";
+import { runSimulations } from "../utils/hydraulicService.js";
+import { detectNegativePressures } from "../utils/detectNegativePressures.js";
 import { detectLowPressures } from "../utils/detectLowPressures.js";
 import { detectLowVelocity } from "../utils/detectLowVelocity.js";
-import { detectNegativePressures } from "../utils/detectNegativePressures.js";
-import { runSimulations } from "../utils/hydraulicService.js";
-import { getAllNodes } from "./nodesController.js";
-import { fetchPipes } from "./pipesController.js";
+import { detectGreatVelocity } from "../utils/detectGreatVelocity.js";
+import { detectGreatPressures } from "../utils/detectGreatPressures.js";
 
-export const monitoringResultsController = async function (req, res) {
+
+export const getAlerts = async function (req, res) {
     try {
 
         const requestedHour = parseInt(req.query.hour) || new Date().getHours();
@@ -49,6 +52,9 @@ export const monitoringResultsController = async function (req, res) {
         // Vitesses trop faibles
         const lowVelocity = await detectLowVelocity(pipesArray)
 
+        // Pressions éléves
+        const greatPressure = await detectGreatPressures(nodesArray)
+
         // Vitesses trop grandes
         const greatVelocity = await detectGreatVelocity(pipesArray)
 
@@ -70,7 +76,8 @@ export const monitoringResultsController = async function (req, res) {
                 
                 pressures: {
                     negative: negativePressures,
-                    low: lowPressures
+                    low: lowPressures,
+                    great: greatPressure
                 },
 
                 velocities: {

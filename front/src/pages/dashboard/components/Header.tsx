@@ -16,7 +16,7 @@ const Header = function ({sidebarCollapse, onToggleSidebar}: HeaderProps) {
 
 
     return (
-        <div className="bg-white/80 relative dark:bg-slate-900/80 border-b backdrop-blur-xl border-slate-200/50 dark:border-slate-700/50 px-6  max-md:px-0 py-4">
+        <div className={`bg-white/80 relative dark:bg-slate-900/80 border-b backdrop-blur-xl border-slate-200/50 dark:border-slate-700/50 px-6  max-md:px-0 py-4 `}>
 
             <div className="flex items-center justify-between">
                 {/* Left section */}

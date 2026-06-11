@@ -147,3 +147,288 @@ export const demandVsFlowController = async function (req, res) {
         });
     }
 };
+
+
+
+export const pressuresPieChart = async (req, res) => {
+    try {
+
+        const requestedHour = parseInt(req.query.hour) || new Date().getHours();
+
+        // Données du réseau
+        const nodes = await getAllNodes();
+        const pipes = await fetchPipes();
+
+        // Simulation
+        const simulationData = await runSimulations(nodes, pipes);
+
+        // Snapshot de l'heure demandée
+        const snapshot = simulationData.data.times.find(
+                (t) => Math.floor(t.Heure) === requestedHour
+            );
+
+        if (!snapshot) {
+            return res.status(404).json({
+                success: false,
+                message: "Snapshot introuvable"
+            });
+        }
+
+        const nodesArray = Object.entries(snapshot.nodes)
+
+            .map(([_id, data]) => ({
+                ...data,
+                _id
+            }));
+
+        // Détection des anomalies
+        const negativePressures = await detectNegativePressures(nodesArray);
+
+        const lowPressures = await detectLowPressures(nodesArray);
+
+        const totalNodes = nodesArray.length;
+
+        const negativeCount = negativePressures.length;
+
+        const lowCount = lowPressures.length;
+
+        const normalCount =
+            totalNodes -
+            negativeCount -
+            lowCount;
+
+        const conformityRate =
+            totalNodes > 0
+                ? Number(
+                    (
+                        (normalCount / totalNodes) *
+                        100
+                    ).toFixed(1)
+                )
+                : 0;
+
+        return res.status(200).json({
+            success: true,
+            hour: requestedHour,
+
+            summary: {
+                totalNodes,
+                normalCount,
+                lowCount,
+                negativeCount,
+                conformityRate
+            },
+
+            chartData: [
+                {
+                    name: "Préssions normales",
+                    value: Number((normalCount/totalNodes)*100) ,
+                    color: "#10b981"
+                },
+                {
+                    name: "Pression faible",
+                    value: Number((lowCount/totalNodes)*100),
+                    color: "#f59e0b"
+                },
+                {
+                    name: "Pression négative",
+                    value: Number((negativeCount/totalNodes)*100),
+                    color: "#ef4444"
+                }
+            ]
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Erreur pressureDistributionController :",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message:
+                "Erreur lors du calcul de la répartition des pressions"
+        });
+    }
+};
+
+export const pipesTable = async function (req, res) {
+
+    try {
+
+        const requestedHour = parseInt(req.query.hour) || new Date().getHours();
+
+        const nodes = await getAllNodes();
+        const pipes = await fetchPipes();
+
+        const simulationData = await runSimulations(nodes, pipes);
+
+        const snapshot =
+            simulationData.data.times.find(
+                (t) =>
+                    Math.floor(t.Heure) === requestedHour
+            );
+
+        if (!snapshot) {
+            return res.status(404).json({
+                success: false,
+                message: "Snapshot introuvable"
+            });
+        }
+
+        /**
+         * Résultats hydrauliques des conduites
+         */
+        const pipesArray = Object.entries(snapshot.links
+        ).map(([id, data]) => ({
+            ...data,
+            _id: id
+        }));
+
+        /**
+         * Anomalies
+         */
+        const lowVelocity = await detectLowVelocity(pipesArray);
+
+        const greatVelocity = await detectGreatVelocity(pipesArray);
+
+        /**
+         * Fusion des anomalies
+         */
+        const criticalPipes = [];
+
+        for (const pipe of lowVelocity) {
+
+            criticalPipes.push({
+                ...pipe,
+                issue: "LOW_VELOCITY"
+            });
+
+        }
+
+        for (const pipe of greatVelocity) {
+
+            criticalPipes.push({
+                ...pipe,
+                issue: "HIGH_VELOCITY"
+            });
+
+        }
+
+        /**
+         * Tri par gravité
+         */
+        criticalPipes.sort((a, b) => {
+
+            if (a.issue === "HIGH_VELOCITY") {
+                return b.velocity - a.velocity;
+            }
+
+            if (a.issue === "LOW_VELOCITY") {
+                return a.velocity - b.velocity;
+            }
+
+            return 0;
+
+        });
+
+        return res.status(200).json({
+            success: true,
+            hour: requestedHour,
+            count: criticalPipes.length,
+            data: criticalPipes
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Erreur lors de la récupération des conduites critiques"
+        });
+
+    }
+
+};
+
+export const FlowData = async function (req, res) {
+
+    try {
+
+        const requestedHour = parseInt(req.query.hour) || new Date().getHours();
+
+        const nodes = await getAllNodes();
+        const pipes = await fetchPipes();
+
+        const simulationData = await runSimulations(nodes, pipes);
+
+        const snapshot =
+            simulationData.data.times.find(
+                (t) =>
+                    Math.floor(t.Heure) === requestedHour
+            );
+
+        if (!snapshot) {
+            return res.status(404).json({
+                success: false,
+                message: "Snapshot introuvable"
+            });
+        }
+
+        /**
+         * Résultats hydrauliques des conduites
+         */
+        const pipesArray = Object.entries(snapshot.links
+        ).map(([id, data]) => ({
+            ...data,
+            _id: id
+        }));
+
+        
+        const pipeArray = Object.entries(snapshot?.links).map(([_id, data]) => {
+            return {
+                ...data,
+                _id,
+            }
+        })
+
+        console.log("Tableau pour avoir les débits: ", pipeArray)
+
+
+        /**
+         * Tri par gravité
+         */
+        // pipeArray.sort((a, b) => {
+
+        //     if (a.issue === "HIGH_VELOCITY") {
+        //         return b.velocity - a.velocity;
+        //     }
+
+        //     if (a.issue === "LOW_VELOCITY") {
+        //         return a.velocity - b.velocity;
+        //     }
+
+        //     return 0;
+
+        // });
+
+        return res.status(200).json({
+            success: true,
+            hour: requestedHour,
+            data: pipeArray
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Erreur lors de la récupération des conduites critiques"
+        });
+
+    }
+
+};

@@ -1,5 +1,7 @@
-import { MoreHorizontal, TrendingDown, TrendingUp } from "lucide-react";
-import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { MinusSquare, MoreHorizontal, TrendingDown, TrendingUp } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { mainService } from "../../../services/mainService";
 
 const recentsOrders = [
     {   id: "#3847",
@@ -87,21 +89,56 @@ const recentsOrders = [
 
 const TableSection = function () {
 
-    const getStatusColor = function (status:string) {
-        switch(status) {
-            case "completed":
-                return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                break;
-            case "pending":
-                return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
-                break;
-            case "cancelled":
-                return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                break;
-            default:
-                return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
+    const [currentHour, setCurrentHour] = useState(() => {
+        return new Date().getHours();
+    })
+
+    useEffect(() => {
+        const interval = setInterval(()=> {
+            const newHour = new Date().getHours()
+            setCurrentHour((prev) => prev !== newHour ? newHour : prev )
+        }, 6000)
+
+
+        return () => {
+            clearInterval(interval)
         }
-    }
+    },[])
+
+
+    const {data: pipes} = useQuery({
+        queryKey: ["pipes-data", currentHour],
+        queryFn: () => mainService.pipesData(currentHour),
+        refetchInterval: 5000
+    })
+
+    console.log("La table des pipes: ", pipes)
+
+    const getVelocityColor = (velocity: number) => {
+
+        if (velocity >= 0.15 && velocity <= 2) {
+            return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
+        }
+    
+        if (velocity < 0.15) {
+            return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400";
+        }
+    
+        if (velocity > 2) {
+            return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+        }
+    
+        return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400";
+    };
+
+    // Pour les débits
+    const {data:flow} = useQuery({
+        queryKey: ["flows", currentHour],
+        queryFn: () => mainService.flowData(currentHour),
+        refetchInterval: 5000
+    })
+
+    console.log("Les débit: ", flow)
 
     return (
 
@@ -113,8 +150,8 @@ const TableSection = function () {
 
                     <div className="flex items-center justify-between">
                         <div >
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Recents orders</h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">Latest customers orders</p>
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Toutes le conduites</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Avec des anomalies</p>
                         </div>
                         <button className="text-blue-500 hover:text-blue-700 text-sm font-medium transition-colors">Voir tout</button>
                     </div>
@@ -125,52 +162,47 @@ const TableSection = function () {
                     <table className="w-full">
                         <thead>
                             <tr>
-                                <th className="text-left p-4 text-sm font-semibold text-slate-600">Order ID</th>
-                                <th className="text-left p-4 text-sm font-semibold text-slate-600">Product</th>
-                                <th className="text-left p-4 text-sm font-semibold text-slate-600">Amount</th>
-                                <th className="text-left p-4 text-sm font-semibold text-slate-600">Status</th>
-                                <th className="text-left p-4 text-sm font-semibold text-slate-600">Date</th>
+                                <th className="text-left p-4 text-sm font-semibold text-slate-600">ID conduite</th>
+                                <th className="text-left p-4 text-sm font-semibold text-slate-600">Nom conduite</th>
+                                <th className="text-left p-4 text-sm font-semibold text-slate-600">pertes de charges</th>
+                                <th className="text-left p-4 text-sm font-semibold text-slate-600">Vitesse</th>
+                                <th className="text-left p-4 text-sm font-semibold text-slate-600">Date de pose</th>
                             </tr>
                         </thead>
 
                         <tbody>
-                            {recentsOrders.map(function(order, index) {
+                            {pipes?.data.map(function(pipe:any, index:number) {
                                 return (
                                     <tr key={index} className="border-b border-slate-200/50 dark:border-slate-700/50  hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors">
 
                                         <td className="p-4">
                                             <span className="text-sm font-bold text-slate-800 dark:text-white">
-                                                {order.id}
+                                                {pipe._id.slice(0, 6)}
                                             </span>
                                         </td>
 
                                         <td className="p-4">
                                             <span className="text-sm text-slate-800 dark:text-white">
-                                                {order.product}
+                                                {pipe?.code}
                                             </span>
                                         </td>
 
                                         <td className="p-4">
                                             <span className="text-sm text-slate-800 dark:text-white">
-                                                {order.amount}
+                                                {pipe?.headloss} m
                                             </span>
                                         </td>
 
                                         <td className="p-4">
-                                            <span className={`text-sm px-3 py-1 rounded-full  ${getStatusColor(order.status)}`}>
-                                                {order.status}
+                                            <span className={`text-sm px-3 py-1 rounded-full  ${getVelocityColor(pipe?.velocity)}`}>
+                                                {pipe?.velocity} m/s
                                             </span>
                                         </td>
 
-                                        <td className="p-4">
-                                            <span className="text-sm text-slate-800 dark:text-white">
-                                                {order.date}
-                                            </span>
-                                        </td>
 
                                         <td className="p-4">
                                             <span className="text-sm text-slate-800 dark:text-white">
-                                                <MoreHorizontal className="w-4 h-4"/>
+                                                Depuis le {pipe?.date}
                                             </span>
                                         </td>
 
@@ -188,7 +220,7 @@ const TableSection = function () {
                     <div className="flex justify-between items-center">
 
                         <div className="text-lg font-bold text-slate-800 dark:text-white">
-                            <h3 className="text-lg font-bold  ">Top Products</h3>
+                            <h3 className="text-lg font-bold  ">Débits des conduites anormales</h3>
                         </div>
 
                         <p className="text-sm text-slate-500  daek:text-slate-400">
@@ -198,23 +230,29 @@ const TableSection = function () {
                     <button className="text-sm text-blue-600  hover:text-blue-700 font-medium">Voir tout</button>
                 </div>
 
-                {/* Dynamic data */}
+                {/* Flow data */}
                 <div className="p-6 space-y-4 ">
-                    {topProducts.map(function(product, index){
-                        return (
-                            <div key={index} className="flex items-center justify-between p-4 rounded-xl bg-slate-100/50 dark:bg-slate-800/50 transition-colors">
-                                <div className="flex-1">
-                                    <h4 className="text-sm font-semibold text-slate-800 dark:text-white">{product.name}</h4>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors">{product.sales}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-sm font-semibold text-slate-800 dark:text-white">{product.revenue}</p>
-                                    <div className="flex flex-row items-center  space-x-1">
-                                        {product.trend === "up" ?<TrendingUp className="size-4 text-emerald-500"/> : <TrendingDown className="size-4  text-red-500"/>}
 
-                                        <span className={`text-xs font-medium ${product.trend === "up" ? "text-emerald-500" : "text-red-500"}`}>{product.change}</span>
+                    {pipes?.data.map(function(pipe:any, index:number){
+
+                        return (
+                            <div key={index} className="flex items-center justify-between p-4 rounded-xl bg-slate-200/50 dark:bg-slate-800/50 transition-colors">
+                                
+                                <div className="flex-1">
+                                    <h4 className="text-sm font-semibold text-slate-800 dark:text-white">{pipe.code}</h4>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors">{pipe._id.slice(0, 6)}</p>
+                                </div>
+                                
+
+                                <div className="text-right">
+                                    <p className="text-sm font-semibold text-slate-800 dark:text-white">{pipe.flow} </p>
+                                    <div className="flex flex-row items-center  space-x-1">
+                                        <TrendingUp className="size-4 text-emerald-500"/>
+
+                                        <span className={`text-xs font-medium text-emerald-500`}>En hausse</span>
                                     </div>
                                 </div>
+
                             </div>
                         )
                     })}

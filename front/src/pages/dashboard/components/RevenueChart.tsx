@@ -18,7 +18,7 @@ import { mainService } from "../../../services/mainService";
 //     {month: "Dec", revenue: 89000, expenses: 58000}
 // ];
 
-const RevenueChart:React.FC = function () {
+const DemandFlowInjectedChart:React.FC = function () {
 
     const [currentHour, setCurrentHour] = useState(() => {
         return new Date().getHours();
@@ -54,7 +54,7 @@ const RevenueChart:React.FC = function () {
     }
 
     return (
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-b-xl border border-slate-200/50 dark:border-slate-700/50">
+        <div className="bg-white/80  dark:bg-slate-900/80 backdrop-blur-xl rounded-b-xl border border-slate-200/50 dark:border-slate-700/50">
             <div className="flex items-center  justify-between mb-6 p-6">
                 <div >
                     <div >
@@ -84,7 +84,7 @@ const RevenueChart:React.FC = function () {
                 </div>
             </div>
 
-            <div className="h-80">
+            <div className="h-80 ">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={graphics?.data || []} margin={{top: 20, left: 20, right: 30, bottom: 5}}>
                         <CartesianGrid 
@@ -156,4 +156,4 @@ const RevenueChart:React.FC = function () {
     )
 }
 
-export default RevenueChart
+export default DemandFlowInjectedChart

@@ -22,13 +22,12 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
             badge: "Nouveau"
         },
         {
-            id:"analytics",
-            label: "Analytics",
+            id:"analytics-diagnostics",
+            label: "Alertes & Diagnostics",
             icon:BarChart3,
             submenu: [
-                {id: "overview", label: "Overview"},
-                {id: "reports", label: "Reports"},
-                {id: "insights", label: "Insights"},
+                {id: "alerts", label: "Alertes"},
+                {id: "diagnostics", label: "Diagnostics"},
             ]
         },
         {
@@ -79,11 +78,6 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
             label: "Simulation",
             icon: ComputerIcon
         },
-        {
-            id: "survey",
-            icon: Settings,
-            label: "Survey"
-        }
     ];
 
     const [expandedItems, setExpandedItems] = useState(new Set(["analytics"]));
@@ -105,7 +99,7 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
 
 
     return (
-        <div className={`${collapse ? "w-20" : "w-72"}  transition-all duration-300 bg-white/80 dark:bg-slate-900/80 border-r border-slate-200/50  backdrop-blur-xl   dark:border-slate-700/50 flex flex-col relative z-10`}>
+        <div className={`${collapse ? "w-20" : "w-72"}  transition-all duration-200 bg-white/80 dark:bg-slate-900/80 border-r border-slate-200/50  backdrop-blur-xl   dark:border-slate-700/50 flex flex-col relative z-10`}>
             
             {/* Logo */}
             {!collapse  &&  ( <div className="p-6  border-b border-slate-200/50 dark:border-slate-700/50">
@@ -162,7 +156,7 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
                             {item?.submenu  && !collapse &&  expandedItems.has(item.id) && <div className="ml-8  mt-2 space-y-1">
                                 {item.submenu?.map(function(item) {
                                     return (
-                                        <button key={item.id} className="w-full text-left p-2 text-sm text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-all duration-200">{item.label}</button>
+                                        <button onClick={() => navigate(`/dashboard/${item.id}`)} key={item.id} className="w-full text-left p-2 text-sm text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-all duration-200">{item.label}</button>
                                     )
                                 })}
                             </div>}

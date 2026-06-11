@@ -1,16 +1,12 @@
+
+// Extrait de generateInpFile.js
 export function generateInpFile(nodes, pipes) {
+
   const lines = [];
   
   lines.push("[TITLE]");
   lines.push("Simulation hydraulique - Reseau " + new Date().toLocaleDateString());
   lines.push("");
-
-  // 1. PATTERN DE CONSOMMATION
-  // lines.push("[PATTERNS]");
-  // lines.push(";ID   Multipliers");
-  // for (const pattern of patterns) {
-  //   lines.push(`${pattern.patternName.padEnd(8)}  ${pattern.multipliers.join(' ')}`);
-  // }
 
   const patternsMap = new Map();
   nodes.forEach(node => {
@@ -21,7 +17,7 @@ export function generateInpFile(nodes, pipes) {
     }
   });
 
-  // 2. ÉCRITURE DE LA SECTION PATTERNS
+  // ÉCRITURE DE LA SECTION PATTERNS
   lines.push("[PATTERNS]");
   lines.push(";ID          Multipliers");
   for (const [name, multipliers] of Array.from(patternsMap.entries() )) {
@@ -110,6 +106,4 @@ function getRoughness(material) {
     default: return 0.1;
   }
 }
-
-
 

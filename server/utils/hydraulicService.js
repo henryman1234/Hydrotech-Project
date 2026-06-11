@@ -134,8 +134,7 @@ export async function runSimulations(nodes,pipes){
 
             for(const pipe of pipes){
 
-                const id= (pipe._id || pipe.code).toString()
-                .replace(/\s+/g, "_");
+                const id= (pipe._id || pipe.code).toString().replace(/\s+/g, "_");
 
                 const index =  model.getLinkIndex(id);
 

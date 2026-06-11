@@ -14,6 +14,8 @@ import DashboardLayout from './pages/dashboard/DashboardLayout';
 import Network from './pages/dashboard/pages/Network';
 import SimulationTest from './pages/dashboard/pages/SimulationTest';
 import Survey from './pages/dashboard/pages/Survey';
+import Alerts from './pages/dashboard/pages/Alerts';
+import Diagnostics from './pages/dashboard/pages/Diagnostics';
 
 
 function App() {
@@ -27,7 +29,6 @@ function App() {
         {
           path: "",
           element: <Home/>
-
         },
         {
           path: "auth",
@@ -54,8 +55,12 @@ function App() {
               element: <Main/>
             },
             {
-              path: "inventory",
-              element:  <Inventory/>
+              path: "alerts",
+              element: <Alerts/>
+            },
+            { 
+              path: "diagnostics",
+              element: <Diagnostics/>
             },
             {
               path: "messages",
@@ -73,16 +78,11 @@ function App() {
               path: "calendar",
               element: <Calendar/>
             },
-            {
-              path: "survey",
-              element: <Survey/>
-            }
           ]
         },
 
       ]
     }
-
 
 
   ])

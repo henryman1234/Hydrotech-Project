@@ -1,16 +1,16 @@
 import React from "react";
-import RevenueChart from "../components/RevenueChart";
-import SalesChart from "../components/SalesChart";
+import DemandFlowInjectedChart from "../components/RevenueChart";
+import PressuresChart from "../components/PressuresChart";
 
 
 const ChartSection:React.FC =  function () {
     return(
         <div className="grid  grid-cols-1 xl:grid-cols-3 gap-6 overflow-auto">
-            <div className="xl:col-span-2 overflow-x-auto w-full ">
-                <RevenueChart/>
+            <div className="xl:col-span-2  ">
+                <DemandFlowInjectedChart/>
             </div>
             <div className="space-y-6">
-                <SalesChart/>
+                <PressuresChart/>
             </div>
         </div>
     )
