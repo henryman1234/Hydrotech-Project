@@ -106,7 +106,7 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
             collapse
                 ? "-translate-x-full"
                 : "translate-x-0"
-        }  transition-all ease-in-out duration-200 bg-white/80 dark:bg-slate-900/80 border-r border-slate-200/50  backdrop-blur-xl   dark:border-slate-700/50 fixed flex-col z-998   h-screen overflow-y-auto bottom-0 shadow-md  scrollbar-thin  
+        }  transition-all ease-in-out duration-200 bg-white/80 dark:bg-slate-900/80 border-r border-slate-200/50  backdrop-blur-xl   dark:border-slate-700/50 fixed flex-col z-998   min-h-screen overflow-y-auto bottom-0 shadow-md  scrollbar-thin  
         top-18
         left-0` }>
             
@@ -130,7 +130,8 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
 
 
             {/* Navigation */}
-            <nav className="md:flex-1 overflow-y-auto scrollbar-thin  space-y-2  p-4 ">
+            <nav className="flex-1 overflow-y-auto scrollbar-thin  space-y-2  p-4 ">
+                
                 {menuItems.map(function(item) {
                     const Icon = item.icon
                     return (
