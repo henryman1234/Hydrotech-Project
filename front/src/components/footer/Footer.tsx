@@ -28,7 +28,7 @@ const Footer  = function () {
                         </a>
 
                         <p className="text-gray-400 leading-relaxed max-w-sm">
-                            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Minima unde veritatis itaque expedita aut quidem explicabo, perferendis est quibusdam corrupti maxime.
+                            Hydrotech est un projet académique et exprérimental, qui se veut innovant dans le secteur de l'adduction en eau, cependant nous vous conseillons de toujours verifier les resultats de l'application
                         </p>
 
                         {/* Social Media Links */}

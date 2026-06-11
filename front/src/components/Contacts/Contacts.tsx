@@ -63,7 +63,9 @@ const Contacts = function () {
                         <div className="">
                             <h3 className="text-2xl mb-4 font-semibold text-gray-500">Let's connect</h3>
 
-                            <p className="text-gray-600 leading-relaxed">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Iure, minima odio? Necessitatibus totam numquam dolor.</p>
+                            <p className="text-gray-600 leading-relaxed">
+                            Pour nous écrire, utiliser notre mail, nos réseaux réseaux sociaux ou alors faites une pull request sur Github
+                            </p>
                         </div>
                         
                         {/* Second */}

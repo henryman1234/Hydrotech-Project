@@ -1,8 +1,9 @@
 import { Bell, ChevronDown, Combine, Filter, Menu, MenuSquareIcon, Plus, Search, Settings, Sun, User } from "lucide-react"
-import React, { useState, type MouseEventHandler, type SetStateAction } from "react"
+import React, { useContext, useState, type MouseEventHandler, type SetStateAction } from "react"
 import { useTheme, type ThemeContextData } from "../../../contexts/ThemeContext"
 import Image from "../../../../public/images/2.jpg"
 import  {createPortal} from "react-dom"
+import { AuthContext, type AuthContextData } from "../../../contexts/AuthContext"
 
 interface HeaderProps {
     sidebarCollapse: boolean,
@@ -12,15 +13,18 @@ const Header = function ({sidebarCollapse, onToggleSidebar}: HeaderProps) {
 
     const {theme, toggleTheme} = useTheme() as ThemeContextData
 
+    const {currentUser, updateUser} = useContext(AuthContext) as AuthContextData
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
 
     return (
-        <div className={`bg-white/80 relative dark:bg-slate-900/80 border-b backdrop-blur-xl border-slate-200/50 dark:border-slate-700/50 px-6  max-md:px-0 py-4 `}>
+        <div className={`bg-white/80 relative dark:bg-slate-900/80 border-b backdrop-blur-xl border-slate-200/50 dark:border-slate-700/50 px-6 z-999 max-md:px-0 py-4 `}>
 
             <div className="flex items-center justify-between">
                 {/* Left section */}
                 <div className="flex items-center space-x-4">
+
                     <button onClick={onToggleSidebar} className="rounded-lg p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                         <Menu className="w-5 h-5"/>
                     </button>
@@ -121,9 +125,14 @@ const Header = function ({sidebarCollapse, onToggleSidebar}: HeaderProps) {
 
                     {/* User Profile */}
                     <div className=" items-center hidden  md:flex space-x-3 pl-3 border-l border-slate-200 dark:border-slate-700">
-                        <img src={Image} alt="" className="w-8 h-8 rounded-full object-cover ring-2 ring-blue-500" />
+
+                    <div className="h-8 w-8 rounded-full flex items-center justify-center bg-linear-to-r from-purple-400  to-purple-500 ">
+                        <span className="text-white font-medium text-sm">{currentUser?.name.charAt(0).toUpperCase()}</span>
+                    </div>
+
+
                         <div className="hidden md:block">
-                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors">Henry Euloge</p>
+                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors">{currentUser?.name}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors">Administrateur</p>
                         </div>
                         <ChevronDown className="w-4 h-4 text-slate-400"/>

@@ -1,7 +1,8 @@
 import { BarChart3, Binoculars, Calendar, ChevronDown, ComputerIcon, FileText, LayoutDashboard, MessagesSquare, Network, Package, Settings, ShoppingBag, Space, User } from "lucide-react"
-import React, { useState, type SetStateAction } from "react"
+import React, { useContext, useState, type SetStateAction } from "react"
 import Image from "../../../../public/images/2.jpg"
 import { useLocation, useNavigate } from "react-router-dom"
+import { AuthContext, type AuthContextData } from "../../../contexts/AuthContext"
 
 interface SidebarProps {
     collapse: boolean,
@@ -97,9 +98,17 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
     const navigate = useNavigate()
     const location = useLocation()
 
+    const {currentUser, updateUser} = useContext(AuthContext) as AuthContextData
+
 
     return (
-        <div className={`${collapse ? "w-20" : "w-72"}  transition-all duration-200 bg-white/80 dark:bg-slate-900/80 border-r border-slate-200/50  backdrop-blur-xl   dark:border-slate-700/50 flex flex-col relative z-10`}>
+        <div className={` ${
+            collapse
+                ? "-translate-x-full"
+                : "translate-x-0"
+        }  transition-all ease-in-out duration-200 bg-white/80 dark:bg-slate-900/80 border-r border-slate-200/50  backdrop-blur-xl   dark:border-slate-700/50 fixed flex-col z-998   h-screen overflow-y-auto bottom-0    scrollbar-thin  
+        top-20
+        left-0` }>
             
             {/* Logo */}
             {!collapse  &&  ( <div className="p-6  border-b border-slate-200/50 dark:border-slate-700/50">
@@ -168,15 +177,19 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
 
             {/* User Profile */}
             {!collapse && <div className="p-4 border-t border-slate-200/50 dark:border-slate-700/50">
-                <div className="flex  items-center space-x-3  p-3 rounded-xl  bg-slate-50 dark:bg-slate-900/50 ">
-                    <img className="w-10 h-10 rounded-full  ring-2 ring-blue-500 object-cover" src={Image} alt="Image de l'admin" />
 
-                    <div className="flex-1 min-w-0">
-                        <div  className="flex-1 min-w-0">
-                            <p className="text-slate-800 dark:text-white font-medium  text-sm truncate">Henry Euloge</p>
-                            <p className="text-xs truncate text-slate-500  dark:text-slate-400">Administrateur</p>
-                        </div> 
+                <div className=" items-center hidden  md:flex space-x-3 pl-3 border-l border-slate-200 dark:border-slate-700">
+
+                    <div className="h-8 w-8 rounded-full flex items-center justify-center bg-linear-to-r from-purple-400  to-purple-500 ">
+                        <span className="text-white font-medium text-sm">{currentUser?.name.charAt(0).toUpperCase()}</span>
                     </div>
+
+
+                    <div className="hidden md:block">
+                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors">{currentUser?.name}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors">Administrateur</p>
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-slate-400"/>
 
                 </div>
 

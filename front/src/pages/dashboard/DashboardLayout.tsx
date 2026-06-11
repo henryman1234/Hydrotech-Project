@@ -11,6 +11,9 @@ const DashboardLayout = function () {
         return savedState !== null ? JSON.parse(savedState) : false
     })
 
+    console.log("La sidebar est fermée ?: ", sidebarCollapse)
+
+
     // Persist the state of the sidebar in the LocalStorage
     useEffect(function(){
         window.localStorage.setItem("sidebar_collapsed", JSON.stringify(sidebarCollapse))
@@ -19,16 +22,20 @@ const DashboardLayout = function () {
 
     const [currentPage, setCurrentPage] = useState("dashboard")
 
+
+
     return (
         <div className="min-h-screen bg-linear-to-r from-slate-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900  transition-all duration-200">
 
-            <div className="flex h-screen overflow-hidden">
+            <div className="flex h-screen overflow-hidden ">
+
                 <Sidebar 
                     collapse={sidebarCollapse} 
                     onToggle={() => setSidebarCollapse(!sidebarCollapse)}
                     currentPage ={currentPage}
                     onPageChange={setCurrentPage}
                 />
+
                 <div className="flex-1   flex min-w-0  flex-col overflow-hidden">
                     <Header  
                         sidebarCollapse={sidebarCollapse}

@@ -468,7 +468,7 @@ const DiagnosticsTable = () => {
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-6 text-slate-500"/>
                         <input 
-                            className="pr-4 py-3 w-full border text-slate-600 dark:text-slate-400  pl-10 placeholder-slate-500  border-slate-300 dark:border-slate-700 rounded-2xl outline-none" 
+                            className="pr-4 py-2 w-full border text-slate-600 dark:text-slate-400  pl-10 placeholder-slate-500  border-slate-300 dark:border-slate-700 rounded-2xl outline-none" 
                             type="text" value={globalFilter} 
                             placeholder="Rechercher..." 
                             onChange={(e) => setGlobalFilter(e.target.value)}
