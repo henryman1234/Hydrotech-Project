@@ -34,6 +34,10 @@ const DashboardLayout = function () {
                     onToggle={() => setSidebarCollapse(!sidebarCollapse)}
                     currentPage ={currentPage}
                     onPageChange={setCurrentPage}
+                    onToggleSidebar={function () {
+                        // e.stopPropagation();
+                        setSidebarCollapse(!sidebarCollapse);
+                    }}
                 />
 
                 <div className="flex-1   flex min-w-0  flex-col overflow-hidden">
@@ -41,7 +45,7 @@ const DashboardLayout = function () {
                         sidebarCollapse={sidebarCollapse}
                         onToggleSidebar={function () {
                             // e.stopPropagation();
-                            setSidebarCollapse(!sidebarCollapse);
+                            setSidebarCollapse(false);
                         }}
                     />
 

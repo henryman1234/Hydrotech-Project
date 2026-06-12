@@ -1,4 +1,4 @@
-import { BarChart3, Binoculars, Calendar, ChevronDown, ComputerIcon, FileText, LayoutDashboard, MessagesSquare, Network, Package, Settings, ShoppingBag, Space, User } from "lucide-react"
+import { BarChart3, Binoculars, Calendar, ChevronDown, ComputerIcon, Cross, FileText, LayoutDashboard, Menu, MessagesSquare, Network, Package, Settings, ShoppingBag, Space, User, X } from "lucide-react"
 import React, { useContext, useState, type SetStateAction } from "react"
 import Image from "../../../../public/images/2.jpg"
 import { useLocation, useNavigate } from "react-router-dom"
@@ -8,11 +8,12 @@ interface SidebarProps {
     collapse: boolean,
     onToggle: () => void,
     currentPage: string,
-    onPageChange: React.Dispatch<SetStateAction<string>>
+    onPageChange: React.Dispatch<SetStateAction<string>>,
+    onToggleSidebar: (arg:  boolean) =>  void
 
 }
 
-const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: SidebarProps) {
+const Sidebar = function ({collapse, onToggle, onPageChange, currentPage, onToggleSidebar}: SidebarProps) {
 
     const menuItems = [
         {
@@ -106,9 +107,17 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
             collapse
                 ? "-translate-x-full"
                 : "translate-x-0"
-        }  transition-all ease-in-out duration-200 bg-white/80 dark:bg-slate-900/80 border-r border-slate-200/50  backdrop-blur-xl   dark:border-slate-700/50 fixed flex-col z-998   min-h-screen overflow-y-auto bottom-0 shadow-md  scrollbar-thin  
-        top-18
+        }  transition-all ease-in-out duration-200 bg-white/80 dark:bg-slate-900/80 border-r border-slate-200/50  backdrop-blur-xl   dark:border-slate-700/50 fixed flex-col z-999   min-h-screen overflow-y-auto bottom-0 shadow-md  scrollbar-thin  
+        top-0
         left-0` }>
+
+            {/* Menu Burger */}
+            <div className="pl-6 pb-2 pt-4">
+                <button onClick={()=> onToggleSidebar(true)}  className="rounded-lg p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <X  className="w-6 h-6  font-medium"/>
+                </button>
+
+            </div>
             
             {/* Logo */}
             {!collapse  &&  ( <div className="p-6  border-b border-slate-200/50 dark:border-slate-700/50">
