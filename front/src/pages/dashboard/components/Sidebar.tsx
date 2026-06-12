@@ -130,7 +130,7 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
 
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto scrollbar-thin  space-y-2  p-4 ">
+            <nav className="flex-1 overflow-y-auto scrollbar-thin  space-y-2  p-4">
                 
                 {menuItems.map(function(item) {
                     const Icon = item.icon
@@ -173,23 +173,42 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage}: Sideb
                         </div>
                     )
                 })}
+
+                    {/* <div className="items-center max-sm:flex space-x-3 pl-3 border-l border-slate-200 dark:border-slate-700">
+
+                        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-linear-to-r from-purple-400  to-purple-500 ">
+                            <span className="text-white font-medium text-sm">{currentUser?.name.charAt(0).toUpperCase()}</span>
+                        </div>
+
+
+                        <div className="hidden md:block">
+                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors">{currentUser?.name}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors">Administrateur</p>
+                        </div>
+
+                        <ChevronDown className="w-4 h-4 text-slate-400"/>
+
+                    </div> */}
             </nav>
             
 
             {/* User Profile */}
-            {!collapse && <div className="p-4 border-t border-slate-200/50 dark:border-slate-700/50 mt-6">
+            {!collapse && <div className="p-4 border-t border-slate-200/50 
+            
+            dark:border-slate-700/50 mt-6">
 
-                <div className=" items-center hidden  md:flex space-x-3 pl-3 border-l border-slate-200 dark:border-slate-700">
+                <div className="items-center flex space-x-3 pl-3 border-l border-slate-200 dark:border-slate-700">
 
                     <div className="h-8 w-8 rounded-full flex items-center justify-center bg-linear-to-r from-purple-400  to-purple-500 ">
                         <span className="text-white font-medium text-sm">{currentUser?.name.charAt(0).toUpperCase()}</span>
                     </div>
 
 
-                    <div className="hidden md:block">
+                    <div className="">
                         <p className="text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors">{currentUser?.name}</p>
                         <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors">Administrateur</p>
                     </div>
+
                     <ChevronDown className="w-4 h-4 text-slate-400"/>
 
                 </div>
