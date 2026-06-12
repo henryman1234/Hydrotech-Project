@@ -42,14 +42,6 @@ export async function runSimulations(nodes,pipes){
         // Chargement du moteur
         await workspace.loadModule();
 
-        const wasmPath = path.resolve(
-            "node_modules/epanet-js/dist/epanet.wasm"
-        );
-        
-        console.log("WASM exists ?", fs.existsSync(wasmPath));
-        console.log("WASM path :", wasmPath);
-
-
 
         const inpContent = generateInpFile (nodes, pipes)
 
