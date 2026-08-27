@@ -43,4 +43,171 @@ export const testControllers = async (req, res) => {
     }
   };
 
-  kfjuhfuhfuhuhuhfuhf'uhfufhufh'ufhufhufhufh'fuh'fufh
+
+import { detectGreatVelocity } from "../utils/detectGreatVelocity.js";
+import { detectLowPressures } from "../utils/detectLowPressures.js";
+import { detectLowVelocity } from "../utils/detectLowVelocity.js";
+import { detectNegativePressures } from "../utils/detectNegativePressures.js";
+import { runSimulations } from "../utils/hydraulicServiceScenario.js";
+import { getAllNodes } from "./nodesController.js";
+import { fetchPipes } from "./pipesController.js";
+
+export const scenarioResultsController = async function (req, res) {
+
+    try {
+
+        const {
+            hour,
+            pipes: modifiedPipes = []
+        } = req.body;
+
+        const requestedHour = Number(hour);
+
+        /**
+         * Chargement du réseau
+         */
+        const nodes = await getAllNodes();
+        const pipes = await fetchPipes();
+
+        /**
+         * Création d'une copie temporaire des conduites
+         */
+        const scenarioPipes = pipes.map((pipe) => {
+
+            const modifiedPipe = modifiedPipes.find(
+                (p) => String(p._id) === String(pipe._id)
+            );
+
+            if (!modifiedPipe) {
+                return pipe;
+            }
+
+            return {
+                ...pipe,
+
+                diameter:
+                    modifiedPipe.diameter ?? pipe.diameter,
+
+                length:
+                    modifiedPipe.length ?? pipe.length,
+
+                roughness:
+                    modifiedPipe.roughness ?? pipe.roughness
+            };
+
+        });
+
+        /**
+         * Lancement de la simulation
+         */
+        const simulationData = await runSimulations(
+            nodes,
+            scenarioPipes
+        );
+
+        /**
+         * Snapshot demandé
+         */
+        const snapshot = simulationData.data.times.find(
+            (time) =>
+                Math.floor(time.Heure) === requestedHour
+        );
+
+        if (!snapshot) {
+
+            return res.status(404).json({
+                success: false,
+                message: `Aucun snapshot trouvé pour ${requestedHour}h`
+            });
+
+        }
+
+        /**
+         * Transformation des résultats
+         */
+        const nodesArray = Object.entries(snapshot.nodes).map(
+            ([_id, data]) => ({
+                ...data,
+                _id
+            })
+        );
+
+        const pipesArray = Object.entries(snapshot.links).map(
+            ([_id, data]) => ({
+                ...data,
+                _id
+            })
+        );
+
+        /**
+         * Détection des anomalies
+         */
+        const negativePressures =
+            await detectNegativePressures(nodesArray);
+
+        const lowPressures =
+            await detectLowPressures(nodesArray);
+
+        const lowVelocity =
+            await detectLowVelocity(pipesArray);
+
+        const greatVelocity =
+            await detectGreatVelocity(pipesArray);
+
+        /**
+         * Réponse
+         */
+        return res.status(200).json({
+
+            success: true,
+
+            hour: requestedHour,
+
+            data: snapshot,
+
+            warnings: {
+
+                hasIssue:
+                    negativePressures.length > 0 ||
+                    lowPressures.length > 0 ||
+                    lowVelocity.length > 0 ||
+                    greatVelocity.length > 0,
+
+                pressures: {
+
+                    negative: negativePressures,
+
+                    low: lowPressures
+
+                },
+
+                velocities: {
+
+                    low: lowVelocity,
+
+                    great: greatVelocity
+
+                }
+
+            }
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Erreur lors de la simulation du scénario."
+
+        });
+
+    }
+
+};

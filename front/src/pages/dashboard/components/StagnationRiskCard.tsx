@@ -1,18 +1,31 @@
+import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowRightToLine, Ruler, Waves } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { diagnosticsService } from "../../../services/diagnosticsService";
 
 
 const StagnationRiskCard = ()  => {
-    // {
-    //     title: "Total Views",
-    //     value:  "456773",
-    //     change: "-2.1%",
-    //     trend: "down",
-    //     icon: Eye,
-    //     color: "from-orange-500 to-red-600",
-    //     bgColor: "bg-orange-50 dark:bg-orange-900/20",
-    //     textColor: "text-orange-600 dark:text-orange-400"
-    // }
+
+    const  [currentHour, setCurrentHour] = useState(() => {
+        return  new Date().getHours()
+    })
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const newHour = new Date().getHours()
+            setCurrentHour((prev) => prev !== newHour ? newHour : prev)
+        }, 6000)
+
+        return () => {
+            clearInterval(interval)
+        }
+    }, [])
+
+    const {data: pressures} = useQuery({
+        queryKey: ["low-velocity", currentHour],
+        queryFn: () => diagnosticsService.lowVelocity(currentHour),
+        refetchInterval: 5000
+    })
 
     return (
 
@@ -29,17 +42,17 @@ const StagnationRiskCard = ()  => {
                 {/* Second */}
                 <div className="flex-1 ">
 
-                    <p className="text-5xl font-bold mb-2 text-orange-600 dark:orange-red-400 transition-colors">12</p>
+                    <p className="text-5xl font-bold mb-2 text-orange-600 dark:orange-red-400 transition-colors">{pressures?.data?.low?.count}</p>
 
 
-                    <p className="text-sm font-medium mb-2 text-slate-600 dark:text-slate-400 transition-colors">Risques de stagnation</p>
+                    <p className="text-sm font-medium mb-2 text-slate-600 dark:text-slate-400 transition-colors">{pressures?.data?.low?.title}</p>
 
 
                     <div className="flex  flex-col ">
 
                         <div className="flex items-center space-x-1 mb-2 ">
                             <ArrowRightToLine className="h-4 w-4 text-orange-500"/>
-                            <span className={`text-sm font-semibold  text-orange-500`}>Faible renouvellement </span>
+                            <span className={`text-sm font-semibold  text-orange-500`}>{pressures?.data?.low?.desc}</span>
                         </div>
 
                         <span className="text-slate-500  dark:text-slate-400 text-sm">de l'eau</span>

@@ -1,4 +1,4 @@
-import { BarChart3, Binoculars, Calendar, ChevronDown, ComputerIcon, Cross, FileText, LayoutDashboard, Menu, MessagesSquare, Network, Package, Settings, ShoppingBag, Space, User, X } from "lucide-react"
+import { BarChart3, Binoculars, Calendar, ChevronDown, ComputerIcon, Cross, FileText, LayoutDashboard, Menu, MessagesSquare, Network, Package, ScreenShareIcon, Settings, ShoppingBag, Space, User, X } from "lucide-react"
 import React, { useContext, useState, type SetStateAction } from "react"
 import Image from "../../../../public/images/2.jpg"
 import { useLocation, useNavigate } from "react-router-dom"
@@ -21,7 +21,7 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage, onTogg
             icon: LayoutDashboard,
             label: "Dashboard",
             active: true,
-            badge: "Nouveau"
+            badge: "Principal"
         },
         {
             id:"analytics-diagnostics",
@@ -30,6 +30,16 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage, onTogg
             submenu: [
                 {id: "alerts", label: "Alertes"},
                 {id: "diagnostics", label: "Diagnostics"},
+            ]
+        },
+        {
+            id: "scenarios",
+            icon: ScreenShareIcon,
+            label: "Scénarios",
+            submenu: [
+                {id: "modify-diameter", label: "Modifier le diamètre"},
+                {id: "orders", label: "Modifier la rugosité"},
+                {id: "customers", label: "Modifier la demande"},
             ]
         },
         {
@@ -43,27 +53,13 @@ const Sidebar = function ({collapse, onToggle, onPageChange, currentPage, onTogg
                 {id: "activity", label: "User Activity"},
             ]
         },
-        {
-            id: "ecommerce",
-            icon: ShoppingBag,
-            label: "Consommations",
-            submenu: [
-                {id: "products", label: "Products"},
-                {id: "orders", label: "Orders"},
-                {id: "customers", label: "Customers"},
-            ]
-        },
+
         {
             id: "inventory",
             label: "Débits",
             icon: Package,
             count: "847"
         },
-        // {
-        //     id: "calendar",
-        //     label: "Calendar",
-        //     icon: Calendar,
-        // },
         {
             id: "messages",
             label: "Message",

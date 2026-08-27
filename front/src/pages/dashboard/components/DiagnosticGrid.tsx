@@ -15,7 +15,6 @@ const DiagnosticsGrid = () => {
             <StagnationRiskCard/>
             <SubPressionCard/>
             <UsureCard/>
-            {/* <OthersRisksCard/> */}
 
         </div>
     )

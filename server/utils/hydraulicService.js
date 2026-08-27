@@ -28,7 +28,7 @@ async function initSimulator() {
 
 }
 
-export async function runSimulations(nodes,pipes){
+export async function runSimulations(nodes,pipes) {
 
     let model;
 
@@ -44,6 +44,9 @@ export async function runSimulations(nodes,pipes){
 
 
         const inpContent = generateInpFile (nodes, pipes)
+
+        console.log("Fichier Inp de surveillance: ", inpContent)
+
 
         const dir = dirname(fileURLToPath(import.meta.url))
 

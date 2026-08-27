@@ -3,12 +3,11 @@ import {MapContainer, TileLayer, Popup, Marker, Polyline} from "react-leaflet"
 import "leaflet/dist/leaflet.css";
 import { useQuery } from "@tanstack/react-query";
 import { nodeService } from "../../../services/nodeService";
-import Pin, { type AlertType } from "../components/Node";
+import { type AlertType } from "../components/Node";
 import { pipeService } from "../../../services/pipeService";
 import Pipe from "../components/Pipe";
-import SimulationInfo from "../components/SimulationInfo";
-import { networkService } from "../../../services/networkService";
-import NetworkInfo from "../components/NetworkInfo";
+import { scenariosService } from "../../../services/scenariosService";
+import ScenariosInfo from "../components/ScenariosInfo";
 import Node from "../components/Node";
 
 
@@ -16,9 +15,9 @@ export type PipeData = {
   _id: string,
   code: string,
   diameter: number,
-  material: string,
-  roughness: number,
+  material: string
   velocity?: number, 
+  roughness: number,
   length: number,
   startNode: {
     location: {
@@ -48,14 +47,36 @@ export type NodeData = {
   }
 }
 
-const Network = () => {
+const ModifyDiameter = () => {
 
   const [currentHour, setCurrentHour] = useState(
       () => new Date().getHours()
   );
 
   const currentDay = new Date().toLocaleDateString("fr-FR");
-  const [isScenarioMode, setIsScenarioMode] = useState(false)
+
+  const [isScenarioMode, setIsScenarioMode] = useState<boolean>(false)
+
+
+
+  useEffect(() => {
+    const state = window.localStorage.getItem("mode_scenario")
+
+    if (!state) {
+        return ;
+    }
+
+    setIsScenarioMode(JSON.parse(state));
+
+  }, [])
+
+  useEffect(()=> {
+    if (!isScenarioMode)  return;
+
+    window.localStorage.setItem("mode_scenario", JSON.stringify(isScenarioMode))
+
+  }, [isScenarioMode])
+
 
   /**
    * ⏱ Sync heure locale
@@ -74,7 +95,7 @@ const Network = () => {
    */
   const { data: resultsData } = useQuery({
       queryKey: ["results-per-hours", currentHour],
-      queryFn: () => networkService.fetchSimulatedResultsByHour(currentHour),
+      queryFn: () => scenariosService.fetchSimulatedResultsByHour(currentHour),
       refetchInterval: 5000
   });
 
@@ -82,7 +103,7 @@ const Network = () => {
   // Tous les snapshot
   const {data: snapshots} = useQuery({
     queryKey: ["all-results"],
-    queryFn: networkService.fetchSimulatedResults,
+    queryFn: scenariosService.fetchSimulatedResults,
     refetchInterval: 5000
   })
   const currentSnapshot = resultsData?.data;
@@ -114,7 +135,6 @@ const Network = () => {
       );
   }, [resultsData]);
 
-  console.log("Resultats de surveillance: ", lowPressureIds, negativePressureIds)
   
 
   /**
@@ -139,8 +159,6 @@ const Network = () => {
       );
   }, [resultsData]);
 
-  console.log("Resultats de surveillance: ", lowVelocityIds, highVelocityIds)
-
   const position: [number, number] = [3.854933, 11.500602];
 
   /**
@@ -161,12 +179,14 @@ const Network = () => {
   });
 
   if (isLoading) {
-      return <div>Chargement de la carte...</div>;
+    return <div>Chargement de la carte...</div>;
   }
 
   if (error) {
-      return <div>Erreur de chargement</div>;
+    return <div>Erreur de chargement</div>;
   }
+
+  
 
   return (
       <MapContainer
@@ -181,10 +201,12 @@ const Network = () => {
           />
 
 
-          {/* NetworkInfo */}
-          <NetworkInfo
+          {/* ScenarioInfo */}
+          <ScenariosInfo
                 hour={currentHour}
                 date={currentDay}
+                isScenarioMode={isScenarioMode}
+                setIsScenarioMode={setIsScenarioMode}
            />
 
           {/* =========================
@@ -210,7 +232,6 @@ const Network = () => {
                       key={node._id}
                       node={node}
                       dynamicData={dynamicNode}
-                      alertType={alertType}
                       isScenarioMode={isScenarioMode}
                   />
               );
@@ -228,6 +249,7 @@ const Network = () => {
 
               const isHighVelocity = highVelocityIds.has(pipe._id);
 
+              
               return (
                   <Pipe
                       key={pipe?._id}
@@ -244,4 +266,4 @@ const Network = () => {
 };
 
 
-export default Network
+export default ModifyDiameter

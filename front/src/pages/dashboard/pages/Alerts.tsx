@@ -40,8 +40,6 @@ const Alerts = () => {
         // refetchInterval: 2000
     })
 
-    console.log(data)
-
     const pressures = data?.warnings?.pressures
 
     const velocities = data?.warnings?.velocities
@@ -54,6 +52,10 @@ const Alerts = () => {
     const lowVelocities = velocities?.low || []
     
     const greatVelocities = velocities?.great || []
+
+    // export const totalAlertsCount = lowPressures.length + greatPressures?.length + lowVelocities?.length + greatVelocities?.length
+
+    //  console.log("Alertes toatles: ", totalAlertsCount)
 
 
     if (isLoading) {

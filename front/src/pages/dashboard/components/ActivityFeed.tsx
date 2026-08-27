@@ -1,13 +1,27 @@
-import { Bell, Clock, Settings, ShoppingCart, User } from "lucide-react"
-import React from "react"
+import { useQuery } from "@tanstack/react-query"
+import { Bell, Clock, GlassWaterIcon, LucideGlassWater, Settings, Settings2, ShoppingCart, User, Volume, type LucideProps } from "lucide-react"
+import React, { useDebugValue, useEffect, useState } from "react"
+import { mainService } from "../../../services/mainService"
+import PerformanceCard from "./PerformanceCard"
+
+export type PerformanceType = {
+    id: number,
+    type: string,
+    icon: React.ForwardRefExoticComponent<Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>>,
+    title: string,
+    description: string,
+    time: string,
+    color:string,
+    bgColor: string,
+}
 
 const activities = [
     {
         id: 1,
         type: "user",
-        icon: User,
-        title: "New user registrered",
-        description: "John Smith created an account",
+        icon: Settings2,
+        title: "Rendement",
+        description: "Pour la journée en cours",
         time: "2 minutes ago",
         color:"text-blue-500",
         bgColor: "bg-blue-100 dark:bg-blue-900/80"
@@ -15,9 +29,9 @@ const activities = [
     {
         id: 2,
         type: "order",
-        icon: ShoppingCart,
-        title: "New order received",
-        description: "Order #3847 for $2,399",
+        icon: GlassWaterIcon,
+        title: "ILP",
+        description:"Indice lineaire de pertes",
         time: "5 minutes ago",
         color: "text-emerald-500",
         bgColor: "bg-emerald-100 dark:bg-emerald-900/30"
@@ -26,8 +40,8 @@ const activities = [
         id: 3,
         type: "settings",
         icon: Settings,
-        title: "New user registrered",
-        description: "John Smith created an account",
+        title: "ILF",
+        description: "Indice linéaire de fuites",
         time: "2 minutes ago",
         color: "text-orange-500",
         bgColor: "bg-orange-100 dark:bg-orange-900/30"
@@ -35,9 +49,9 @@ const activities = [
     {
         id: 1,
         type: "notification",
-        icon: Bell,
-        title: "Low stock alert",
-        description: "John Smith created an account",
+        icon: LucideGlassWater,
+        title: "ILC",
+        description: "Indice linéaire de consommation",
         time: "2 minutes ago",
         color: "text-red-500",
         bgColor: "bg-red-100 dark:bg-red-900/30"
@@ -45,13 +59,41 @@ const activities = [
 ]
 
 const ActivityFeed =  function () {
+
+    const [currentHour, setCurrentHour] = useState(() => {
+        return new Date().getHours();
+    })
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const newHour = new Date().getHours();
+            setCurrentHour(prev => (prev !== newHour ? newHour : prev));
+        }, 60000);
+  
+        return () => clearInterval(interval);
+    }, []);
+
+    const {data: graphics, isPending} = useQuery({
+        queryKey: ["demand-vs-flow", currentHour],
+        queryFn:  () => mainService.demandVsFlowChart(currentHour)
+    })
+
+    console.log("Les données renvoyés pour le rendement : ",  graphics)
+
+    const rendement = graphics?.data[currentHour]
+
+    console.log("Le rendement pour l'heure en cours: ", rendement)
+
+    
+
+
     return (
         <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl  border border-slate-200/50 dark:border-slate-700/50">
             <div className="p-6 border-b border-slate-200/50 dark:border-slate-700/50  transition-colors">
 
                 <div className="">
-                    <h3 className="text-lg  font-bold text-slate-800 dark:text-white">Activity Feed</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-600">Recent System Activities</p>
+                    <h3 className="text-lg  font-bold text-slate-800 dark:text-white">Indicateurs de performances</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-600">Activités  récentes</p>
                 </div>
 
                 <button className="text-sm font-medium text-blue-600  hover:text-blue-700">Voir tout</button>
@@ -61,29 +103,16 @@ const ActivityFeed =  function () {
             <div className="p-6">
                 <div className="space-y-4">
 
-                    {activities.map(function(activity, index) {
+                    {activities.map(function(performance, index) {
                         
-                        const Icon = activity.icon
+                        const value = rendement?.demandeTotale/rendement?.DébitInjecté
 
                         return (
-                            <div className="flex  items-start space-x-4 p-3 rounded-xl bg-slate-100/50 dark:bg-slate-800/50  transition-colors">
-
-                                <div className={`p-2 rounded-lg bg-linear-to-r ${activity.bgColor}`}>
-                                    <Icon className={`size-4 ${activity.color}`}/>
-                                </div>
-                            
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="text-sm font-semibold text-slate-800 dark:text-white">{activity.title}</h4>
-                                    <p className="text-slate-600  text-sm truncate dark:text-slate-400">{activity.description}</p>
-        
-                                    <div className="flex items-center-safe space-x-1 mt-1">
-                                        <Clock className="size-3 text-slate-400"/>
-                                        <span className="text-xs text-slate-500  dark:text-slate-400">{activity.time}</span>
-        
-                                    </div>
-        
-                                </div>
-                            </div>
+                            <PerformanceCard
+                                key={performance.id}
+                                performance={performance}
+                                value={value }
+                            />
                         )
                     })}
 

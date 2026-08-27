@@ -6,6 +6,7 @@ import { detectNegativePressures } from "../utils/detectNegativePressures.js";
 import { detectLowPressures } from "../utils/detectLowPressures.js";
 import { detectLowVelocity } from "../utils/detectLowVelocity.js";
 import { detectGreatVelocity } from "../utils/detectGreatVelocity.js";
+import { detectGreatPressures } from "../utils/detectGreatPressures.js";
 
 export const totalNetworkLenght =  async (req, res) => {
     try {
@@ -394,9 +395,6 @@ export const FlowData = async function (req, res) {
             }
         })
 
-        console.log("Tableau pour avoir les débits: ", pipeArray)
-
-
         /**
          * Tri par gravité
          */
@@ -432,3 +430,5 @@ export const FlowData = async function (req, res) {
     }
 
 };
+
+

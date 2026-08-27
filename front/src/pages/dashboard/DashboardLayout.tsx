@@ -36,11 +36,12 @@ const DashboardLayout = function () {
                     onPageChange={setCurrentPage}
                     onToggleSidebar={function () {
                         // e.stopPropagation();
-                        setSidebarCollapse(!sidebarCollapse);
+                        setSidebarCollapse(true);
                     }}
                 />
 
                 <div className="flex-1   flex min-w-0  flex-col overflow-hidden">
+
                     <Header  
                         sidebarCollapse={sidebarCollapse}
                         onToggleSidebar={function () {
@@ -49,10 +50,13 @@ const DashboardLayout = function () {
                         }}
                     />
 
+
                     <main className="overflow-y-auto   scrollbar-thin2 flex-1 bg-transparent">
+
                         <div className="space-y-6">
                             <Outlet/>
                         </div>
+                        
                     </main>
 
                 </div>

@@ -30,6 +30,7 @@ const LoginForm:React.FC<LoginFormProps> = function ({onSwitch}) {
 
     const {register, handleSubmit, formState: {errors}} = useForm({resolver: zodResolver(loginSchema)})
 
+    
     const mutation = useMutation({
 
         mutationFn: authService.login,

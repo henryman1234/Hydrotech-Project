@@ -12,10 +12,11 @@ import Messages from './pages/dashboard/pages/Messages';
 import Main from './pages/dashboard/pages/Main';
 import DashboardLayout from './pages/dashboard/DashboardLayout';
 import Network from './pages/dashboard/pages/Network';
-import SimulationTest from './pages/dashboard/pages/SimulationTest';
 import Survey from './pages/dashboard/pages/Survey';
 import Alerts from './pages/dashboard/pages/Alerts';
 import Diagnostics from './pages/dashboard/pages/Diagnostics';
+import Simulation from './pages/dashboard/pages/Simulation';
+import ModifyDiameter from './pages/dashboard/pages/ModifyParameter';
 
 
 function App() {
@@ -72,12 +73,16 @@ function App() {
             },
             {
               path: "simulation",
-              element: <SimulationTest/>
+              element: <Simulation/>
             },
             {
               path: "calendar",
               element: <Calendar/>
             },
+            {
+              path: "modify-diameter",
+              element: <ModifyDiameter/>
+            }
           ]
         },
 

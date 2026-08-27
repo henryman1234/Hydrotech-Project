@@ -9,6 +9,7 @@ import RecommendationCard from "../components/RecomendationCard";
 import { CircleArrowUp, CookingPot, Ruler, ShieldAlert, WavesArrowDown } from "lucide-react";
 
 
+
 const diagnosticsData = [
     {
         title: "Optimiser les diamètres",
@@ -34,6 +35,7 @@ const diagnosticsData = [
 
 
 const Diagnostics = function () {
+
 
     return (
         <div className="space-y-6 sm:p-6  p-2">

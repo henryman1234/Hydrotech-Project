@@ -1,9 +1,32 @@
 import { AlertTriangle, ArrowRightToLine, GaugeCircle, Ruler } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { diagnosticsService } from "../../../services/diagnosticsService";
+import { useQuery } from "@tanstack/react-query";
 
 
 const UsureCard = ()  => {
 
+
+    const  [currentHour, setCurrentHour] = useState(() => {
+        return  new Date().getHours()
+    })
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const newHour = new Date().getHours()
+            setCurrentHour((prev) => prev !== newHour ? newHour : prev)
+        }, 6000)
+
+        return () => {
+            clearInterval(interval)
+        }
+    }, [])
+
+    const {data: velocities} = useQuery({
+        queryKey: ["great-velocity", currentHour],
+        queryFn: () => diagnosticsService.greatVelocity(currentHour),
+        refetchInterval: 5000
+    })
 
     return (
 
@@ -20,10 +43,10 @@ const UsureCard = ()  => {
                 {/* Second */}
                 <div className="flex-1 ">
 
-                    <p className="text-5xl font-bold mb-2 text-violet-600 dark:text-violet-400 transition-colors">12</p>
+                    <p className="text-5xl font-bold mb-2 text-violet-600 dark:text-violet-400 transition-colors">{velocities?.data?.great?.count}</p>
 
 
-                    <p className="text-sm font-medium mb-2 text-slate-600 dark:text-slate-400 transition-colors">Risques d'usures</p>
+                    <p className="text-sm font-medium mb-2 text-slate-600 dark:text-slate-400 transition-colors">{velocities?.data?.great?.title}</p>
 
 
                     <div className="flex  flex-col ">

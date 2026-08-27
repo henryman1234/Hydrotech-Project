@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 const Hero = function () {
 
     const user = null
+    
 
     return (
         <div>

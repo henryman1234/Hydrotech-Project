@@ -3,18 +3,20 @@ import {MapContainer, TileLayer, Popup, Marker, Polyline} from "react-leaflet"
 import "leaflet/dist/leaflet.css";
 import { useQuery } from "@tanstack/react-query";
 import { nodeService } from "../../../services/nodeService";
-import Pin, { type AlertType } from "../components/Pin";
+import Pin, { type AlertType } from "../components/Node";
 import { pipeService } from "../../../services/pipeService";
 import Pipe from "../components/Pipe";
-import { networkService } from "../../../services/networkService";
 import SimulationInfo from "../components/SimulationInfo";
+import { simulationService } from "../../../services/simulationService";
+import Node from "../components/Node";
 
 
 export type PipeData = {
   _id: string,
   code: string,
   diameter: number,
-  material: string
+  material: string,
+  roughness: number,
   length: number,
   startNode: {
     location: {
@@ -25,6 +27,10 @@ export type PipeData = {
     location: {
       coordinates: number[]
     }
+  },
+  geometry: {
+    type: "LineString",
+    coordinates: number[][]
   }
 } 
 
@@ -40,47 +46,42 @@ export type NodeData = {
   }
 }
 
-const Network = () => {
+const Simulation = () => {
 
-  const [currentHour, setCurrentHour] = useState(
-      () => new Date().getHours()
-  );
+
+  const [currentHour, setCurrentHour] = useState<number>(0);
 
   const currentDay = new Date().toLocaleDateString("fr-FR");
 
-  /**
-   * ⏱ Sync heure locale
-   */
-  useEffect(() => {
-      const interval = setInterval(() => {
-          const newHour = new Date().getHours();
-          setCurrentHour(prev => (prev !== newHour ? newHour : prev));
-      }, 60000);
+  const [isScenarioMode, setIsScenarioMode] = useState(false)
 
-      return () => clearInterval(interval);
-  }, []);
-
-  /**
-   * 📊 Simulation API
-   */
-  const { data: resultsData } = useQuery({
-      queryKey: ["results-per-hours", currentHour],
-      queryFn: () => networkService.fetchSimulatedResultsByHour(currentHour),
-      refetchInterval: 5000
-  });
 
 
   // Tous les snapshot
   const {data: snapshots} = useQuery({
     queryKey: ["all-results"],
-    queryFn: networkService.fetchSimulatedResults,
+    queryFn: simulationService.fetchSimulatedResults,
     refetchInterval: 5000
   })
-  const currentSnapshot = resultsData?.data;
+
+  const currentSnapshot = useMemo(() => {
+    return snapshots?.results?.data?.times?.find((snapshot:any, index:number) => currentHour === snapshot?.Heure)
+  }, [currentHour, snapshots])
 
 
-  console.log("Résultats spécifiques à une heure: ", resultsData)
+    // On greffe les warnings  
+  const { data } = useQuery({
+      queryKey: ["results-per-hours"],
+      queryFn: () => simulationService.fetchSimulationsByHour(currentSnapshot?.Heure),
+      refetchInterval: 5000
+  });
+
+
   console.log("Tous les snapshots: ", snapshots)
+
+  console.log("Données spécifique à cette heure dans la simulation: ", currentSnapshot)
+
+  console.log("Snapshot avec les warnings: ", data)
 
 
   /**
@@ -91,19 +92,19 @@ const Network = () => {
 
   const negativePressureIds = useMemo(() => {
       return new Set(
-          (resultsData?.warnings?.pressures?.negative || []).map(
+          (data?.warnings?.pressures?.negative || []).map(
               (n: any) => String(n._id)
           )
       );
-  }, [resultsData]);
+  }, [data]);
 
   const lowPressureIds = useMemo(() => {
       return new Set(
-          (resultsData?.warnings?.pressures?.low || []).map(
+          (data?.warnings?.pressures?.low || []).map(
               (n: any) => String(n._id)
           )
       );
-  }, [resultsData]);
+  }, [data]);
 
   console.log("Resultats de surveillance: ", lowPressureIds, negativePressureIds)
   
@@ -116,23 +117,24 @@ const Network = () => {
 
   const lowVelocityIds = useMemo(() => {
       return new Set(
-          (resultsData?.warnings?.velocities?.low || []).map(
+          (data?.warnings?.velocities?.low || []).map(
               (p: any) => String(p._id)
           )
       );
-  }, [resultsData]);
+  }, [data]);
 
   const highVelocityIds = useMemo(() => {
       return new Set(
-          (resultsData?.warnings?.velocities?.great || []).map(
+          (data?.warnings?.velocities?.great || []).map(
               (p: any) => String(p._id)
           )
       );
-  }, [resultsData]);
+  }, [data]);
 
   console.log("Resultats de surveillance: ", lowVelocityIds, highVelocityIds)
 
   const position: [number, number] = [3.854933, 11.500602];
+  
 
   /**
    * =========================
@@ -174,7 +176,9 @@ const Network = () => {
           <SimulationInfo
               hour={currentHour}
               date={currentDay}
+              onHourChange={setCurrentHour}
           />
+
 
           {/* =========================
               🟢 NŒUDS
@@ -195,11 +199,12 @@ const Network = () => {
               else if (isLowPressure) alertType = "low-pressure";
 
               return (
-                  <Pin
+                  <Node
                       key={node._id}
                       node={node}
                       dynamicData={dynamicNode}
                       alertType={alertType}
+                      isScenarioMode={isScenarioMode}
                   />
               );
           })}
@@ -223,6 +228,7 @@ const Network = () => {
                       dynamicData={dynamicPipe}
                       isLowVelocity={isLowVelocity}
                       isHighVelocity={isHighVelocity}
+                      isScenarioMode={isScenarioMode}
                   />
               );
           })}
@@ -231,4 +237,4 @@ const Network = () => {
 };
 
 
-export default Network
+export default Simulation 

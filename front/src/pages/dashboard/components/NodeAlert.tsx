@@ -34,11 +34,11 @@ const NodeAlert:React.FC<NodeAlertProps> = ({name, type, pressure}) => {
     const getText = (name:string, pressure:number) => {
 
         if (pressure > 50   ) {
-            return <p className="mb-3 dark:text-slate-100 text-slate-800  text-sm ">Le noeud intitulé "{name}" possède une pression elévée de <strong>{pressure}</strong> m/s</p>
+            return <p className="mb-3 dark:text-slate-100 text-slate-800  text-sm ">Le noeud intitulé "{name}" possède une pression elévée de <strong>{pressure}</strong> mCE</p>
         }
     
         if (pressure < 10 && pressure >= 0) {
-            return <p className="mb-3 dark:text-slate-100 text-slate-800  text-sm ">Le noeud intitulé "{name}" possède une pression faible de <strong>{pressure}</strong> m/s</p>
+            return <p className="mb-3 dark:text-slate-100 text-slate-800  text-sm ">Le noeud intitulé "{name}" possède une pression faible de <strong>{pressure}</strong> mCE</p>
         }
     
     };

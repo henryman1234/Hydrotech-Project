@@ -38,6 +38,14 @@ const PipeSchema = new mongoose.Schema({
         type: String,
         enum: ["Open", "Close"],
         default: "Open"
+    },
+    geometry: {
+        type: {
+            type: String,
+            enum: ["LineString"],
+            default: "LineString"
+        },
+        coordinates: [[Number]] /**[Latitude, Longitude] des noeuds intermédiares */
     }
 }, {timestamps:true})
 

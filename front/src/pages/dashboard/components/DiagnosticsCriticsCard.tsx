@@ -1,9 +1,31 @@
+import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowRightToLine, Ruler } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { diagnosticsService } from "../../../services/diagnosticsService";
 
 
 const CriticsCard = ()  => {
 
+    const  [currentHour, setCurrentHour] = useState(() => {
+        return  new Date().getHours()
+    })
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const newHour = new Date().getHours()
+            setCurrentHour((prev) => prev !== newHour ? newHour : prev)
+        }, 6000)
+
+        return () => {
+            clearInterval(interval)
+        }
+    }, [])
+
+    const {data:critics} = useQuery({
+        queryKey: ["critics-cards", currentHour],
+        queryFn: () => diagnosticsService.critics(currentHour),
+        refetchInterval: 5000
+    })
 
     return (
 
@@ -20,17 +42,17 @@ const CriticsCard = ()  => {
                 {/* Second */}
                 <div className="flex-1 ">
 
-                    <p className="text-5xl font-bold mb-2 text-red-600 dark:text-red-400 transition-colors">12</p>
+                    <p className="text-5xl font-bold mb-2 text-red-600 dark:text-red-400 transition-colors">{critics?.data?.criticalNodes?.negative?.count}</p>
 
 
-                    <p className="text-sm font-medium mb-2 text-slate-600 dark:text-slate-400 transition-colors">Diagnostics critiques</p>
+                    <p className="text-sm font-medium mb-2 text-slate-600 dark:text-slate-400 transition-colors">{critics?.data?.criticalNodes?.negative?.title}</p>
 
 
                     <div className="flex  flex-col ">
 
                         <div className="flex items-center space-x-1 mb-2 ">
                             <ArrowRightToLine className="h-4 w-4 text-red-500"/>
-                            <span className={`text-sm font-semibold  text-red-500`}>Intervention rapide</span>
+                            <span className={`text-sm font-semibold  text-red-500`}>{critics?.data?.criticalNodes?.negative?.desc}</span>
                         </div>
 
                         <span className="text-slate-500  dark:text-slate-400 text-sm"> nécessaire</span>

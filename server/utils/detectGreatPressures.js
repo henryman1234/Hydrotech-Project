@@ -7,11 +7,11 @@ import { getNode } from "../controllers/nodesController.js";
  */
 export const detectGreatPressures =  async (nodes) => {
 
-    const negativePressures = nodes.filter((node) => node.pressure > 50);
+    const greatPressures = nodes.filter((node) => node.pressure > 50);
 
     const results = await Promise.all(
 
-        negativePressures.map(async function (node) {
+        greatPressures.map(async function (node) {
 
             const identifiedNode = await getNode(node._id || node.id )
             

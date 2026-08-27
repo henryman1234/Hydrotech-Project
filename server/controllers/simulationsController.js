@@ -2,9 +2,26 @@ import { detectGreatVelocity } from "../utils/detectGreatVelocity.js";
 import { detectLowPressures } from "../utils/detectLowPressures.js";
 import { detectLowVelocity } from "../utils/detectLowVelocity.js";
 import { detectNegativePressures } from "../utils/detectNegativePressures.js";
+import { generateInpFileSimulation } from "../utils/generateInpFileSimulation.js";
 import { runSimulations } from "../utils/hydraulicServiceSimulation.js";
 import { getAllNodes } from "./nodesController.js";
 import { fetchPipes } from "./pipesController.js";
+
+export const allSimulationsController = async function  (req, res) {
+
+    // Lecture des données statique de MongoDB
+    const nodes = await getAllNodes()
+    const pipes = await fetchPipes()
+
+    // Génération du fichier INP à la volée
+    const inp = generateInpFileSimulation(nodes, pipes);
+
+    const simulationData = await runSimulations(nodes, pipes);
+
+    res.status(200).json({message: "Toutes les données de la simulation", results: simulationData});
+    
+}
+
 
 export const simulations = async function (req, res) {
     try {

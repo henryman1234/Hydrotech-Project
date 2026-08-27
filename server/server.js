@@ -12,6 +12,8 @@ import patternRouter from "./routes/pattern.js";
 import simulationsRouter from "./routes/simulation.js";
 import mainRouter from "./routes/main.js";
 import alertsRouter from "./routes/alerts.js"
+import diagnosticsRouter from "./routes/diagnostics.js"
+import scenariosRouter from "./routes/scenarios.js"
 dotenv.config()
 
 const app = express()
@@ -52,6 +54,8 @@ app.use("/api/simulations", simulationsRouter);
 app.use("/api/monitoring", monitoringRouter);  
 app.use("/api/main", mainRouter);
 app.use("/api/alerts", alertsRouter);
+app.use("/api/diagnostics", diagnosticsRouter)
+app.use("/api/scenarios", scenariosRouter)
 
 
 // Handle Errors
@@ -59,7 +63,7 @@ app.use(function (err, req, res, next) {
     const message = err.message || "Une érrue est survenue!"
     const status = err.status || 500
 
-    return res.sjson({
+    return res.json({
         status,
         message,
         stack: err.stack
